@@ -2,17 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e91a66c2-54c7-46d1-9e78-7e15d6f6bede" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/oshe/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oshe/geometry.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oshe/ground.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oshe/helpers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oshe/mrt.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oshe/oshe.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oshe/plot.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oshe/radiation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oshe/surface_temperature.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oshe/utci.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oshe/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oshe/ground.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/ground.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oshe/mrt.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/mrt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oshe/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/plot.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,5 +64,15 @@
       <updated>1586782178447</updated>
     </task>
     <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/oshe/plot.py</url>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

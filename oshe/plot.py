@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import dates, ticker
 import pandas as pd
 import numpy as np
-from matplotlib.patches import Patch, Polygon
+from matplotlib.patches import Patch, Polygon, Path, PathPatch
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
@@ -249,10 +249,14 @@ class UTCI(object):
                               "linestyle": ":", "name": "Grass", "hatch": "+"},
                 "GND_PLAY": {"alpha": 1.0, "color": "#BF3F3F", "zorder": 1, "linewidth": 0.25, "edgecolor": "#BF3F3F",
                              "linestyle": ":", "name": "Playground", "hatch": "x"},
+                "GND_WOOD": {"alpha": 1.0, "color": "#B5B09A", "zorder": 1, "linewidth": 0.25, "edgecolor": "#B5B09A",
+                             "linestyle": ":", "name": "Wood", "hatch": "x"},
                 "GND_SAND": {"alpha": 1.0, "color": "#FFEDD3", "zorder": 1, "linewidth": 0.25, "edgecolor": "#FFEDD3",
                              "linestyle": ":", "name": "Sand", "hatch": "o"},
                 "GND_STONE": {"alpha": 1.0, "color": "#FFDEAD", "zorder": 1, "linewidth": 0.25, "edgecolor": "#FFDEAD",
                               "linestyle": ":", "name": "Stone", "hatch": "O"},
+                "GND_STONEDARK": {"alpha": 1.0, "color": "#CFB897", "zorder": 1, "linewidth": 0.25, "edgecolor": "#CFB897",
+                              "linestyle": ":", "name": "Stone (dark)", "hatch": "O"},
                 "GND_SURROUNDING": {"alpha": 0.0, "color": "#000000", "zorder": 1, "linewidth": 0.25,
                                     "edgecolor": "#000000", "linestyle": ":", "name": "Underground", "hatch": "."},
                 "GND_VEGETATION": {"alpha": 1.0, "color": "#6C9400", "zorder": 1, "linewidth": 0.25,
@@ -269,6 +273,8 @@ class UTCI(object):
                              "linestyle": "-", "name": "Ghaf (style) tree", "hatch": "*"},
                 "VEG_PALM": {"alpha": 0.3, "color": "#3FBF7F", "zorder": 4, "linewidth": 1.0, "edgecolor": "#3FBF7F",
                              "linestyle": "-", "name": "Palm (style) tree", "hatch": "*"},
+                "generic_wall": {"alpha": 0.0, "color": "#000000", "zorder": 1, "linewidth": 0.25,
+                                    "edgecolor": "#000000", "linestyle": ":", "name": "Underground", "hatch": "."},
             }
         self.geo_materials = material_properties
 
@@ -392,7 +398,7 @@ class UTCI(object):
     #         plt.close()
 
 
-    def plot_plan(self, rad_files, _type=None, day_period="Daily", season_period="Annual", pts=False, label_pts=None, highlight_pt=None, legend=False, tone_color="k", save_path=None, close=False):
+    def plot_plan(self, rad_files, _type=None, day_period="Daily", season_period="Annual", pts=False, label_pts=None, highlight_pt=None, legend=False, clip=None, tone_color="k", save_path=None, close=False):
 
         # Load geometries into attribute
         self.load_geometries(rad_files)
@@ -455,6 +461,12 @@ class UTCI(object):
                 plt.setp(plt.getp(cb.ax.axes, 'yticklabels'), color=tone_color, fontsize="medium")
                 ax.set_title("UTCI improvement\n{} - {}".format(season_period, day_period), x=0, ha="left", va="bottom", color=tone_color)
 
+        if clip is not None:
+            clip_path = Path(np.vstack([clip, clip[0]]), closed=True)
+            clip_patch = PathPatch(clip_path, facecolor=None, alpha=0)
+            ax.add_patch(clip_patch)
+            for c in tcf.collections:
+                c.set_clip_path(clip_patch)
 
         patches = []
         for k, v in self.geo_data.items():
@@ -476,7 +488,7 @@ class UTCI(object):
                 # Add sample point labels
                 for n, (xx, yy) in enumerate(list(zip(*[x, y]))):
                     if (n % label_pts == 0):
-                        ax.text(xx, yy, n, fontsize=5, ha="left", va="bottom", zorder=10, color=tone_color)
+                        ax.text(xx, yy, n, fontsize=2, ha="left", va="bottom", zorder=10, color=tone_color)
 
         if highlight_pt is not None:
             for p in highlight_pt:
