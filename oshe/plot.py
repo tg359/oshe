@@ -253,7 +253,7 @@ class UTCI(object):
                              "linestyle": ":", "name": "Wood", "hatch": "x"},
                 "GND_SAND": {"alpha": 1.0, "color": "#FFEDD3", "zorder": 1, "linewidth": 0.25, "edgecolor": "#FFEDD3",
                              "linestyle": ":", "name": "Sand", "hatch": "o"},
-                "GND_STONE": {"alpha": 1.0, "color": "#FFDEAD", "zorder": 1, "linewidth": 0.25, "edgecolor": "#FFDEAD",
+                "GND_STONE": {"alpha": 1.0, "color": "#FFDEAD", "zorder": 4, "linewidth": 0.75, "edgecolor": "#FFDEAD",
                               "linestyle": ":", "name": "Stone", "hatch": "O"},
                 "GND_STONEDARK": {"alpha": 1.0, "color": "#CFB897", "zorder": 1, "linewidth": 0.25, "edgecolor": "#CFB897",
                               "linestyle": ":", "name": "Stone (dark)", "hatch": "O"},
@@ -301,8 +301,8 @@ class UTCI(object):
         formatter = dates.DateFormatter('%H:%M')
 
         idx = pd.date_range("2018-{0:02.0f}-15 00:00:00".format(5), "2018-{0:02.0f}-16 00:00:00".format(5), freq="60T", closed="left")
-        pt = pd.Series(index=idx, data=self.df_utci[point_idx][time_mask].groupby([masked_idx.hour]).median().values)
-        of = pd.Series(index=idx, data=pd.Series(self.utci_openfield, index=self.index)[time_mask].groupby([masked_idx.hour]).median().values)
+        pt = pd.Series(index=idx, data=self.df_utci[point_idx][time_mask].groupby([masked_idx.hour]).quantile(0.5).values)
+        of = pd.Series(index=idx, data=pd.Series(self.utci_openfield, index=self.index)[time_mask].groupby([masked_idx.hour]).quantile(0.5).values)
 
         # Instantiate plot
         fig, ax = plt.subplots(1, 1, figsize=(8, 4))
@@ -435,8 +435,8 @@ class UTCI(object):
                 cmap = self.utci_reduction_cmap
                 z = self.df_utci_reduction[time_mask].quantile(0.8, axis=0).values
                 tcf = ax.tricontourf(x, y, z, cmap=cmap, levels=np.linspace(-10, 10, 100), zorder=1, extend="both", alpha=1)
-                tc = ax.tricontour(x, y, z, colors=tone_color, linewidths=0.5, linestyles="--", levels=[4], zorder=10, alpha=1)
-                tcl = ax.clabel(tc, colors=tone_color, inline=True, fontsize="small", fmt="%0.0f")
+                tc = ax.tricontour(x, y, z, colors=tone_color, linewidths=0.5, linestyles=":", levels=[-4, -3, -2, -1, 0, 1, 2, 3, 4], zorder=10, alpha=0.5)
+                tcl = ax.clabel(tc, colors=tone_color, inline=True, fontsize="x-small", fmt="%0.0f")
                 # Add colorbar
                 cax = make_axes_locatable(ax).append_axes("right", size="5%", pad=0.25)
                 cb = plt.colorbar(tcf, cax=cax, ticks=ticker.MaxNLocator(nbins=10))
@@ -505,8 +505,6 @@ class UTCI(object):
             plt.close()
 
     def utci_reduction_heatmap(self, point_idx, vrange=[-10, 10], title_id=None, tone_color="k", invert_y=False, save_path=None, close=False):
-
-
 
         # Create pivotable dataframe
         idx = pd.date_range(start="2018-01-01 00:00:00", end="2019-01-01 00:00:00", freq="60T", closed="left")
@@ -748,3 +746,40 @@ def generic_heatmap_check(values, cbar=False, tone_color="k", save_path=None):
     if save_path:
         fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False)
         print("Plot saved to {}".format(save_path))
+
+def annual_diurnal(annual_hourly_values, quantile=0.5, y_label=None, tone_color="k", save_path=None, close=True):
+
+    year_idx = pd.date_range(start="2018-01-01 01:00:00", end="2019-01-01 01:00:00", freq="60T", closed="left")
+    month_idx = pd.date_range("2008-01-01 00:00", "2008-01-13 00:00", freq="60T", closed="left")
+
+    year_series = pd.Series(data=annual_hourly_values, index=year_idx)
+    month_series = year_series.groupby([year_idx.month, year_idx.hour]).quantile(quantile)
+    month_series.index = np.arange(0, 288, 1)
+
+    fig, ax = plt.subplots(1, 1, figsize=(12, 5))
+    month_series.plot(ax=ax, color='#555555', lw=1, ls='-', label="values")
+    # print(month_series.index, month_series.values)
+    # , where = month_series.values > 0
+    ax.fill_between(month_series.index, month_series.values, where = month_series.values > 0, color = "g")
+    ax.fill_between(month_series.index, month_series.values, where = month_series.values < 0, color = "r")
+
+    # Format plot area
+    [ax.spines[spine].set_visible(False) for spine in ['top', 'right']]
+    [ax.spines[j].set_color(tone_color) for j in ['bottom', 'left']]
+    ax.xaxis.set_ticks(np.arange(0, 288, 24))
+    ax.set_xlim([0, 287])
+    plt.setp(ax.get_yticklabels(), color=tone_color)
+    ax.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], ha='left', color=tone_color)
+    ax.grid(b=True, which='major', axis='y', c=tone_color, ls='--', lw=1, alpha=0.3)
+    ax.grid(b=True, which='major', axis='x', c=tone_color, ls='-', lw=1.5, alpha=0.5)
+    ax.tick_params(length=0)
+    ax.set_xlabel("Monthly diurnal average", color=tone_color)
+    ax.set_ylabel(y_label, color=tone_color)
+
+    plt.tight_layout()
+
+    if save_path:
+        fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False)
+        print("Plot saved to {}".format(save_path))
+    if close:
+        plt.close()

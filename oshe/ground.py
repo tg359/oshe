@@ -181,6 +181,7 @@ class Ground(object):
             visible_absorptance=self.visible_absorptance
         )
         self.df_surface_temperature = pd.Series(self.ground_surface_temperature[0], name="ground_surface_temperature", index=self.index).to_frame()
+        print("Surface temperature calculated for {}".format(self.name))
         return self.ground_surface_temperature
 
     def mrt(self, epw_file: str, idd_file: str, case_name: str = None, output_directory: str = None, shaded: bool = False, write: bool = True):
@@ -205,7 +206,7 @@ class Ground(object):
         all_srf_temps = np.vstack([self.ground_surface_temperature, sky_temp])
 
         # Create sky and ground view factors
-        view_factors = np.array([0.5, 0.5])
+        view_factors = np.array([0.9, 0.1]) # Make ground a larger impactor of comfort than sky
 
         # Calculate surrounding surface temperatures including sky
         surrounding_surface_temperatures = np.power(np.matmul(view_factors.T, np.power(all_srf_temps.T + 273.15, 4).T), 0.25) - 273.15
@@ -230,7 +231,7 @@ class Ground(object):
             diffuse_horizontal_solar=self.radiation_diffuse,
             direct_normal_solar=self.radiation_direct,
             sun_altitude=self.sun_altitude,
-            ground_reflectivity=0,
+            ground_reflectivity=self.reflectivity,#0,
             sky_exposure=0 if shaded else 1,
             radiance=True
         )[0]

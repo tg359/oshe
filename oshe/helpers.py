@@ -79,4 +79,8 @@ def load_points_xyz(file_path: str):
 
 def chunk(enumerable, n=None):
     enumerable = np.array(enumerable)
-    return [list(enumerable[i:i + n]) for i in range(0, enumerable.shape[0], n)]
+    return [enumerable[i:i + n] for i in range(0, enumerable.shape[0], n)]
+
+def chunks(enumerable, n=None):
+    enumerable = np.array(enumerable)
+    return [i for i in np.array_split(enumerable, n)]
