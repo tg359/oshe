@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e91a66c2-54c7-46d1-9e78-7e15d6f6bede" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/a/2/a28fcc56cf14246d2d3682791ed7f3c3dc4202c1" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/a/2/a28fcc56cf14246d2d3682791ed7f3c3dc4202c1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/f/8/f83401f8e6d71863b4bfdea11578c9923aeea1df" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/f/8/f83401f8e6d71863b4bfdea11578c9923aeea1df" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ProcessResults.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/ProcessResults.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oshe/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/plot.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,7 +33,7 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="add_unversioned_files" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/oshe/plot" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../kree" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -61,5 +65,11 @@
       <updated>1586782178447</updated>
     </task>
     <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1074" y="280" key="FileChooserDialogImpl" timestamp="1587048293079">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state x="1074" y="280" key="FileChooserDialogImpl/0.0.1920.1050/-1920.-349.1920.1050@0.0.1920.1050" timestamp="1587048293079" />
   </component>
 </project>

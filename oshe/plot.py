@@ -109,23 +109,23 @@ class UTCI(object):
     def openfield_summary(self):
         summary_vals = np.array([
             np.array([
-                (len(self.utci_openfield[self.morning & self.openfield_comfort]) / len(self.utci_openfield[self.morning])) * 100,
-                (len(self.utci_openfield[self.afternoon & self.openfield_comfort]) / len(self.utci_openfield[self.afternoon])) * 100,
-                (len(self.utci_openfield[self.morning & self.openfield_comfort_plus]) / len(self.utci_openfield[self.morning])) * 100,
-                (len(self.utci_openfield[self.afternoon & self.openfield_comfort_plus]) / len(self.utci_openfield[self.afternoon])) * 100
+                (len(self.utci_openfield[self.morning & self.openfield_comfort]) / (self.morning).sum()) * 100,
+                (len(self.utci_openfield[self.afternoon & self.openfield_comfort]) / (self.afternoon).sum()) * 100,
+                (len(self.utci_openfield[self.morning & self.openfield_comfort_plus]) / (self.morning).sum()) * 100,
+                (len(self.utci_openfield[self.afternoon & self.openfield_comfort_plus]) / (self.afternoon).sum()) * 100
             ]),
 
             np.array([
-                (len(self.utci_openfield[self.may & self.morning & self.openfield_comfort]) / len(self.utci_openfield[self.may & self.morning])) * 100,
-                (len(self.utci_openfield[self.may & self.afternoon & self.openfield_comfort]) / len(self.utci_openfield[self.may & self.afternoon])) * 100,
-                (len(self.utci_openfield[self.may & self.morning & self.openfield_comfort_plus]) / len(self.utci_openfield[self.may & self.morning])) * 100,
-                (len(self.utci_openfield[self.may & self.afternoon & self.openfield_comfort_plus]) / len(self.utci_openfield[self.may & self.afternoon])) * 100,
+                (len(self.utci_openfield[self.may & self.morning & self.openfield_comfort]) / (self.may & self.morning).sum()) * 100,
+                (len(self.utci_openfield[self.may & self.afternoon & self.openfield_comfort]) / (self.may & self.afternoon).sum()) * 100,
+                (len(self.utci_openfield[self.may & self.morning & self.openfield_comfort_plus]) / (self.may & self.morning).sum()) * 100,
+                (len(self.utci_openfield[self.may & self.afternoon & self.openfield_comfort_plus]) / (self.may & self.afternoon).sum()) * 100,
             ]),
             np.array([
-                (len(self.utci_openfield[self.october & self.morning & self.openfield_comfort]) / len(self.utci_openfield[self.october & self.morning])) * 100,
-                (len(self.utci_openfield[self.october & self.afternoon & self.openfield_comfort]) / len(self.utci_openfield[self.october & self.afternoon])) * 100,
-                (len(self.utci_openfield[self.october & self.morning & self.openfield_comfort_plus]) / len(self.utci_openfield[self.october & self.morning])) * 100,
-                (len(self.utci_openfield[self.october & self.afternoon & self.openfield_comfort_plus]) / len(self.utci_openfield[self.october & self.afternoon])) * 100,
+                (len(self.utci_openfield[self.october & self.morning & self.openfield_comfort]) / (self.october & self.morning).sum()) * 100,
+                (len(self.utci_openfield[self.october & self.afternoon & self.openfield_comfort]) / (self.october & self.afternoon).sum()) * 100,
+                (len(self.utci_openfield[self.october & self.morning & self.openfield_comfort_plus]) / (self.october & self.morning).sum()) * 100,
+                (len(self.utci_openfield[self.october & self.afternoon & self.openfield_comfort_plus]) / (self.october & self.afternoon).sum()) * 100,
             ])
         ]).T
 
