@@ -238,41 +238,43 @@ class UTCI(object):
             material_properties = {
                 "BDG_CONTEXT": {"alpha": 1.0, "color": "#BEBEBE", "zorder": 2, "linewidth": 1.0, "edgecolor": "#BEBEBE",
                                 "linestyle": "-", "name": "Building", "hatch": "|"},
-                "GND_ACTIVEPATHWAY": {"alpha": 1.0, "color": "#FFBF00", "zorder": 1, "linewidth": 0.25,
-                                      "edgecolor": "#FFBF00", "linestyle": ":", "name": "Active pathway",
-                                      "hatch": "\\"},
-                "GND_ASPHALT": {"alpha": 1.0, "color": "#696969", "zorder": 1, "linewidth": 0.25,
-                                "edgecolor": "#696969", "linestyle": ":", "name": "Asphalt", "hatch": "/"},
+                # "GND_ACTIVEPATHWAY": {"alpha": 1.0, "color": "#FFBF00", "zorder": 1, "linewidth": 0.25,
+                #                       "edgecolor": "#FFBF00", "linestyle": ":", "name": "Active pathway",
+                #                       "hatch": "\\"},
+                # "GND_ASPHALT": {"alpha": 1.0, "color": "#696969", "zorder": 1, "linewidth": 0.25,
+                #                 "edgecolor": "#696969", "linestyle": ":", "name": "Asphalt", "hatch": "/"},
                 "GND_CONCRETE": {"alpha": 1.0, "color": "#BEBEBE", "zorder": 1, "linewidth": 0.25,
                                  "edgecolor": "#BEBEBE", "linestyle": ":", "name": "Concrete", "hatch": "-"},
                 "GND_GRASS": {"alpha": 1.0, "color": "#005800", "zorder": 1, "linewidth": 0.25, "edgecolor": "#005800",
                               "linestyle": ":", "name": "Grass", "hatch": "+"},
-                "GND_PLAY": {"alpha": 1.0, "color": "#BF3F3F", "zorder": 1, "linewidth": 0.25, "edgecolor": "#BF3F3F",
-                             "linestyle": ":", "name": "Playground", "hatch": "x"},
-                "GND_WOOD": {"alpha": 1.0, "color": "#B5B09A", "zorder": 1, "linewidth": 0.25, "edgecolor": "#B5B09A",
-                             "linestyle": ":", "name": "Wood", "hatch": "x"},
-                "GND_SAND": {"alpha": 1.0, "color": "#FFEDD3", "zorder": 1, "linewidth": 0.25, "edgecolor": "#FFEDD3",
-                             "linestyle": ":", "name": "Sand", "hatch": "o"},
+                # "GND_PLAY": {"alpha": 1.0, "color": "#BF3F3F", "zorder": 1, "linewidth": 0.25, "edgecolor": "#BF3F3F",
+                #              "linestyle": ":", "name": "Playground", "hatch": "x"},
+                # "GND_WOOD": {"alpha": 1.0, "color": "#B5B09A", "zorder": 1, "linewidth": 0.25, "edgecolor": "#B5B09A",
+                #              "linestyle": ":", "name": "Wood", "hatch": "x"},
+                # "GND_SAND": {"alpha": 1.0, "color": "#FFEDD3", "zorder": 1, "linewidth": 0.25, "edgecolor": "#FFEDD3",
+                #              "linestyle": ":", "name": "Sand", "hatch": "o"},
                 "GND_STONE": {"alpha": 1.0, "color": "#FFDEAD", "zorder": 4, "linewidth": 0.75, "edgecolor": "#FFDEAD",
                               "linestyle": ":", "name": "Stone", "hatch": "O"},
-                "GND_STONEDARK": {"alpha": 1.0, "color": "#CFB897", "zorder": 1, "linewidth": 0.25, "edgecolor": "#CFB897",
-                              "linestyle": ":", "name": "Stone (dark)", "hatch": "O"},
+                # "GND_STONEDARK": {"alpha": 1.0, "color": "#CFB897", "zorder": 1, "linewidth": 0.25, "edgecolor": "#CFB897",
+                #               "linestyle": ":", "name": "Stone (dark)", "hatch": "O"},
                 "GND_SURROUNDING": {"alpha": 0.0, "color": "#000000", "zorder": 1, "linewidth": 0.25,
                                     "edgecolor": "#000000", "linestyle": ":", "name": "Underground", "hatch": "."},
-                "GND_VEGETATION": {"alpha": 1.0, "color": "#6C9400", "zorder": 1, "linewidth": 0.25,
-                                   "edgecolor": "#6C9400", "linestyle": ":", "name": "Planting", "hatch": "+"},
+                # "GND_VEGETATION": {"alpha": 1.0, "color": "#6C9400", "zorder": 1, "linewidth": 0.25,
+                #                    "edgecolor": "#6C9400", "linestyle": ":", "name": "Planting", "hatch": "+"},
                 "GND_WATER": {"alpha": 1.0, "color": "#3FBFBF", "zorder": 1, "linewidth": 0.25, "edgecolor": "#3FBFBF",
                               "linestyle": ":", "name": "Water", "hatch": "|"},
-                "SHD_P1_POROUS": {"alpha": 0.4, "color": "#F0F0F0", "zorder": 3, "linewidth": 1.0,
-                                  "edgecolor": "#F0F0F0", "linestyle": "-", "name": "Porous shade", "hatch": "\\"},
-                "SHD_P2_POROUS": {"alpha": 0.4, "color": "#F0F0F0", "zorder": 3, "linewidth": 1.0,
-                                  "edgecolor": "#F0F0F0", "linestyle": "-", "name": "Porous shade", "hatch": "x"},
+                "SHD_WATER": {"alpha": 1.0, "color": "#3FBFBF", "zorder": 1, "linewidth": 0.25, "edgecolor": "#3FBFBF",
+                              "linestyle": ":", "name": "Water", "hatch": "|"},
+                # "SHD_P1_POROUS": {"alpha": 0.4, "color": "#F0F0F0", "zorder": 3, "linewidth": 1.0,
+                #                   "edgecolor": "#F0F0F0", "linestyle": "-", "name": "Porous shade", "hatch": "\\"},
+                # "SHD_P2_POROUS": {"alpha": 0.4, "color": "#F0F0F0", "zorder": 3, "linewidth": 1.0,
+                #                   "edgecolor": "#F0F0F0", "linestyle": "-", "name": "Porous shade", "hatch": "x"},
                 "SHD_SOLID": {"alpha": 0.8, "color": "#696969", "zorder": 3, "linewidth": 1.0, "edgecolor": "#696969",
                               "linestyle": "-", "name": "Solid shade", "hatch": "x"},
                 "VEG_GHAF": {"alpha": 0.3, "color": "#007F00", "zorder": 4, "linewidth": 1.0, "edgecolor": "#007F00",
                              "linestyle": "-", "name": "Ghaf (style) tree", "hatch": "*"},
-                "VEG_PALM": {"alpha": 0.3, "color": "#3FBF7F", "zorder": 4, "linewidth": 1.0, "edgecolor": "#3FBF7F",
-                             "linestyle": "-", "name": "Palm (style) tree", "hatch": "*"},
+                # "VEG_PALM": {"alpha": 0.3, "color": "#3FBF7F", "zorder": 4, "linewidth": 1.0, "edgecolor": "#3FBF7F",
+                #              "linestyle": "-", "name": "Palm (style) tree", "hatch": "*"},
                 "generic_wall": {"alpha": 0.0, "color": "#000000", "zorder": 1, "linewidth": 0.25,
                                     "edgecolor": "#000000", "linestyle": ":", "name": "Underground", "hatch": "."},
             }
@@ -625,10 +627,33 @@ class UTCI(object):
         if close:
             plt.close()
 
+    def reduction_summary(self, threshold=4, quant=0.95):
+        varz = [
+            [(self.masks["Annual"] & self.masks["Morning"]), ["Annual", "07:00 - 10:00"]],
+            [(self.masks["Annual"] & self.masks["Afternoon"]), ["Annual", "16:00 - 19:00"]],
+            [(self.masks["May"] & self.masks["Morning"]), ["May", "07:00 - 10:00"]],
+            [(self.masks["May"] & self.masks["Afternoon"]), ["May", "16:00 - 19:00"]],
+            [(self.masks["October"] & self.masks["Morning"]), ["October", "07:00 - 10:00"]],
+            [(self.masks["October"] & self.masks["Afternoon"]), ["October", "16:00 - 19:00"]],
+        ]
+
+        # Create the "nth percentile" point
+        temp = self.df_utci_reduction.quantile(quant, axis=1)
+
+        # Get the number of hours within specified ranges where threshold reduction is met
+        d = {
+            "Annual": {"07:00 - 10:00": None, "16:00 - 19:00": None},
+            "May": {"07:00 - 10:00": None, "16:00 - 19:00": None},
+            "October": {"07:00 - 10:00": None, "16:00 - 19:00": None}
+        }
+        for i, [j, k] in varz:
+            temp_filtered = temp[i]
+            d[j][k] = ((temp_filtered >= threshold).sum() / temp_filtered.count())
+        return pd.DataFrame.from_dict(d) * 100
+
 
 def utci_comfort_heatmap(hourly_utci_values, highlight_shoulder=False, tone_color="k", invert_y=False, save_path=None, close=True):
-    utci_cmap = ListedColormap(
-        ['#0D104B', '#262972', '#3452A4', '#3C65AF', '#37BCED', '#2EB349', '#F38322', '#C31F25', '#7F1416', '#580002'])
+    utci_cmap = ListedColormap(['#0D104B', '#262972', '#3452A4', '#3C65AF', '#37BCED', '#2EB349', '#F38322', '#C31F25', '#7F1416', '#580002'])
     utci_cmap_bounds = [-100, -40, -27, -13, 0, 9, 26, 32, 38, 46, 100]
     utci_cmap_norm = BoundaryNorm(utci_cmap_bounds, utci_cmap.N)
 
