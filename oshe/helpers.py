@@ -2,6 +2,19 @@ import json
 import pathlib
 import pandas as pd
 import numpy as np
+import uuid
+
+
+def random_id():
+    return str(uuid.uuid4()).replace("-", "")[:10]
+
+
+def flatten(nested_list):
+    if nested_list == []:
+        return nested_list
+    if isinstance(nested_list[0], list):
+        return flatten(nested_list[0]) + flatten(nested_list[1:])
+    return nested_list[:1] + flatten(nested_list[1:])
 
 
 def load_json(json_file: str):
@@ -80,6 +93,7 @@ def load_points_xyz(file_path: str):
 def chunk(enumerable, n=None):
     enumerable = np.array(enumerable)
     return [enumerable[i:i + n] for i in range(0, enumerable.shape[0], n)]
+
 
 def chunks(enumerable, n=None):
     enumerable = np.array(enumerable)

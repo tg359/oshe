@@ -1,5 +1,7 @@
 import numpy as np
 from datetime import datetime
+from .helpers import chunks
+from multiprocessing import Pool
 
 
 def saturated_vapour_pressure(air_temperature: float) -> float:
@@ -71,3 +73,42 @@ def universal_thermal_climate_index(air_temperature: np.ndarray, mean_radiant_te
 
     print("Universal thermal climate index calculated [{}]".format('{0:0.02f} seconds'.format(td)))
     return utci_approx
+
+
+def utci_parallel_int(val_dict):
+    universal_thermal_climate_index_part = universal_thermal_climate_index(
+        val_dict["dbt"],
+        val_dict["mrt"],
+        val_dict["ws"],
+        val_dict["rh"]
+    )
+    print("Thread #{0:} complete".format(val_dict["thread"]))
+    return universal_thermal_climate_index_part
+
+
+def utci_parallel(threads: int, air_temperature: np.ndarray, mean_radiant_temperature: np.ndarray, wind_speed: np.ndarray, relative_humidity: np.ndarray) -> np.ndarray:
+    """ Run the UTCI calculation across multiple processors concurrently (useful for REALLY BIG CASES)
+    Returns
+    -------
+    universal_thermal_climate_index : float
+        The final UTCI experienced as a result of sky and surface heat exchange, and environmental conditions in C.
+    """
+
+    dicts = []
+    for i in range(threads):
+        dicts.append({
+            "dbt": air_temperature,
+            "mrt": chunks(mean_radiant_temperature.T, threads)[i],
+            "ws": wind_speed,
+            "rh": relative_humidity,
+            "thread": i
+        })
+
+    p=Pool(processes=threads)
+    output = p.map(utci_parallel_int, dicts)
+    p.close()
+
+    # Restack results
+    universal_thermal_climate_index_result = np.vstack(output)
+
+    return universal_thermal_climate_index_result

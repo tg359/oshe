@@ -627,6 +627,7 @@ class UTCI(object):
         if close:
             plt.close()
 
+    # NEW METHOD HERE!
     def reduction_summary(self, threshold=4, quant=0.95):
         varz = [
             [(self.masks["Annual"] & self.masks["Morning"]), ["Annual", "07:00 - 10:00"]],
