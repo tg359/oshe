@@ -19,3 +19,9 @@ A
 oshe/radiation.py,d\8\d8258e487a7b0b94a54820cacbcb817480a630bf
 K
 oshe/surface_temperature.py,0\2\02112cc033799033874399e501489a3e0ec03293
+@
+oshe/geometry.py,3\9\3901b820ff2d7b9db55f7bb9536f7cfc555cc5a4
+=
+gnd_worker.py,a\0\a0b887460559a8dd619ec009034e7b85d53e11ec
+@
+requirements.txt,1\9\19359a61ae2446b51b549167b014da2fcf265768

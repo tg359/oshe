@@ -1,100 +1,78 @@
-# coding=utf-8
-
-"""Functions for adjusting MRT for radiative sky exchange (including shortwave solar).
-
+"""
 The solarcal formulas of this module are taken from the following publications:
-[1] Arens, E., T. Hoyt, X. Zhou, L. Huang, H. Zhang and S. Schiavon. 2015.
-Modeling the comfort effects of short-wave solar radiation indoors.
-Building and Environment, 88, 3-9. http://dx.doi.org/10.1016/j.buildenv.2014.09.004
-https://escholarship.org/uc/item/89m1h2dg
+[1] Arens, E., T. Hoyt, X. Zhou, L. Huang, H. Zhang and S. Schiavon. 2015. Modeling the comfort effects of short-wave solar radiation indoors. Building and Environment, 88, 3-9. http://dx.doi.org/10.1016/j.buildenv.2014.09.004 https://escholarship.org/uc/item/89m1h2dg
 [2] ASHRAE Standard 55 (2017). "Thermal Environmental Conditions for Human Occupancy".
-Properties:
-    * SOLARCAL_SPLINES:
-        A dictionary with two keys: 'standing' and 'seated'.
-        Each value for these keys is a 2D matrix of projection factors
-        for human geometry.  Each row refers to an degree of azimuth and each
-        column refers to a degree of altitude.
+SOLARCAL_SPLINES: A dictionary with two keys: 'standing' and 'seated'. Each value for these keys is a 2D matrix of projection factors for human geometry.  Each row refers to an degree of azimuth and each column refers to a degree of altitude.
 """
 
 
 import numpy as np
 
 
-def calc_sky_temperature(horizontal_infrared_radiation, source_emissivity=1):
-    """Calculate sky temperature in Celsius.
+def sky_temperature(horizontal_infrared_radiation: float, source_emissivity: float = 1) -> float:
+    """ Calculate sky temperature in Celsius.
 
-    See EnergyPlus Engineering Reference for more information:
-    https://bigladdersoftware.com/epx/docs/8-9/engineering-reference/
-    climate-calculations.html#energyplus-sky-temperature-calculation
+    See EnergyPlus Engineering Reference for more information: https://bigladdersoftware.com/epx/docs/8-9/engineering-reference/climate-calculations.html#energyplus-sky-temperature-calculation
 
-    Args:
-        horizontal_infrared_radiation: A float value that represents horizontal infrared radiation
-            intensity in W/m2.
-        source_emissivity: A float value between 0 and 1 indicating the emissivity
-             of the heat source that is radiating to the sky. Default is 1 for
-             most outdoor surfaces.
+    Parameters
+    ----------
+    horizontal_infrared_radiation : float
+        A value that represents horizontal infrared radiation intensity in W/m2.
+    source_emissivity : float
+        A value between 0 and 1 indicating the emissivity of the heat source that is radiating to the sky. Default is 1 for most outdoor surfaces.
 
-    Returns:
-        sky_temp: A sky temperature value in C.
+    Returns
+    -------
+    sky_temperature : float
+        A sky temperature value in C.
+
     """
     sigma = 5.6697e-8  # stefan-boltzmann constant
     return ((horizontal_infrared_radiation / (source_emissivity * sigma)) ** 0.25) - 273.15
 
 
-def outdoor_sky_heat_exchange(visible_surfaces_temperature, horizontal_infrared_radiation, diffuse_horizontal_solar_radiation, direct_normal_solar_radiation, solar_altitude,
-                              sky_exposure=1, fraction_body_exposed=1, floor_reflectance=0.25,
-                              posture='standing', sharp=135,
-                              body_absorptivity=0.7, body_emissivity=0.95, radiance=False):
+def outdoor_sky_heat_exchange(visible_surfaces_temperature: float, horizontal_infrared_radiation: float, diffuse_horizontal_solar_radiation: float, direct_normal_solar_radiation: float, solar_altitude: float, sky_exposure: float = 1, fraction_body_exposed: float = 1, floor_reflectance: float = 0.25, posture: str = 'standing', sharp: int = 135, body_absorptivity: float = 0.7, body_emissivity: float = 0.95, radiance: bool = False) -> float:
     """ Perform a full outdoor sky radiant heat exchange.
-    Args:
-        visible_surfaces_temperature: The temperature of surfaces around the person in degrees
-            Celsius. This includes the ground and any other surfaces
-            blocking the view to the sky. When the temperature of these
-            individual surfaces are known, the input here should be the
-            average temperature of the surfaces weighted by view-factor to the human.
-            When such individual surface temperatures are unknown, the outdoor
-            dry bulb temperature is typically used as a proxy.
-        horizontal_infrared_radiation: The horizontal infrared radiation intensity from the sky in W/m2.
-        diffuse_horizontal_solar_radiation: Diffuse horizontal solar irradiance in W/m2.
-        direct_normal_solar_radiation: Direct normal solar irradiance in W/m2.
-        solar_altitude: The altitude of the sun in degrees [0-90].
-        sky_exposure: A number between 0 and 1 representing the fraction of the
-            sky vault in occupant’s view. Default is 1 for outdoors in an
-            open field.
-        fraction_body_exposed: A number between 0 and 1 representing the fraction of
-            the body exposed to direct sunlight. Note that this does not include the
-            body’s self-shading; only the shading from surroundings.
-            Default is 1 for a person standing in an open area.
-        floor_reflectance: A number between 0 and 1 the represents the
-            reflectance of the floor. Default is for 0.25 which is characteristic
-            of outdoor grass or dry bare soil.
-        posture: A text string indicating the posture of the body. Letters must
-            be lowercase.  Choose from the following: "standing", "seated", "supine".
-            Default is "standing".
-        sharp: A number between 0 and 180 representing the solar horizontal
-            angle relative to front of person (SHARP). 0 signifies sun that is
-            shining directly into the person's face and 180 signifies sun that
-            is shining at the person's back. Default is 135, assuming that a person
-            typically faces their side or back to the sun to avoid glare.
-        body_absorptivity: A number between 0 and 1 representing the average
-            shortwave absorptivity of the body (including clothing and skin color).
-            Typical clothing values - white: 0.2, khaki: 0.57, black: 0.88
-            Typical skin values - white: 0.57, brown: 0.65, black: 0.84
-            Default is 0.7 for average (brown) skin and medium clothing.
-        body_emissivity: A number between 0 and 1 representing the average
-            long-wave emissivity of the body.  Default is 0.95, which is almost
-            always the case except in rare situations of wearing metallic clothing.
-    Returns:
-        mrt: The final MRT experienced as a result of sky heat exchange in C.
+    Parameters
+    ----------
+    visible_surfaces_temperature : float
+        The temperature of surfaces around the person in degrees Celsius. This includes the ground and any other surfaces blocking the view to the sky. When the temperature of these individual surfaces are known, the input here should be the average temperature of the surfaces weighted by view-factor to the human. When such individual surface temperatures are unknown, the outdoor dry bulb temperature is typically used as a proxy.
+    horizontal_infrared_radiation : float
+        The horizontal infrared radiation intensity from the sky in W/m2.
+    diffuse_horizontal_solar_radiation : float
+        Diffuse horizontal solar irradiance in W/m2.
+    direct_normal_solar_radiation : float
+        Direct normal solar irradiance in W/m2.
+    solar_altitude : float
+        The altitude of the sun in degrees [0-90].
+    sky_exposure : float
+        A number between 0 and 1 representing the fraction of the sky vault in occupant’s view. Default is 1 for outdoors in an open field.
+    fraction_body_exposed : float
+        A number between 0 and 1 representing the fraction of the body exposed to direct sunlight. Note that this does not include the body’s self-shading; only the shading from surroundings. Default is 1 for a person standing in an open area.
+    floor_reflectance : float
+        A number between 0 and 1 the represents the reflectance of the floor. Default is for 0.25 which is characteristic of outdoor grass or dry bare soil.
+    posture : str
+        A text string indicating the posture of the body. Letters must be lowercase.  Choose from the following: "standing", "seated", "supine". Default is "standing".
+    sharp : int
+        A number between 0 and 180 representing the solar horizontal angle relative to front of person (SHARP). 0 signifies sun that is shining directly into the person's face and 180 signifies sun that is shining at the person's back. Default is 135, assuming that a person typically faces their side or back to the sun to avoid glare.
+    body_absorptivity : float
+        A number between 0 and 1 representing the average shortwave absorptivity of the body (including clothing and skin color). Typical clothing values - white: 0.2, khaki: 0.57, black: 0.88 Typical skin values - white: 0.57, brown: 0.65, black: 0.84 Default is 0.7 for average (brown) skin and medium clothing.
+    body_emissivity : float
+        A number between 0 and 1 representing the average long-wave emissivity of the body.  Default is 0.95, which is almost always the case except in rare situations of wearing metallic clothing.
+    radiance : bool
+        If True, sky exposure is 1 (using the radiance results only), else use the sky exposure values
+    Returns
+    -------
+    mean_radiant_temperature : float
+        The final MRT experienced as a result of sky heat exchange in C.
     """
-    # set defaults using the input parameters
+
+    # Set defaults using the input parameters
     fractional_efficiency = 0.696 if posture == 'seated' else 0.725
 
-    # calculate the influence of shortwave irradiance
+    # Calculate the influence of shortwave irradiance
     if solar_altitude >= 0:
-        s_flux = body_solar_flux_from_parts(diffuse_horizontal_solar_radiation, direct_normal_solar_radiation,
-                                            solar_altitude, sharp, 1 if radiance else sky_exposure,
-                                            fraction_body_exposed, floor_reflectance, posture)
+        s_flux = body_solar_flux_from_parts(diffuse_horizontal_solar_radiation, direct_normal_solar_radiation, solar_altitude, sharp, 1 if radiance else sky_exposure, fraction_body_exposed, floor_reflectance, posture)
         short_effective_radiant_field = effective_radiant_field_from_body_solar_flux(s_flux, body_absorptivity, body_emissivity)
         short_mrt_delta = mrt_delta_from_effective_radiant_field(short_effective_radiant_field, fractional_efficiency)
     else:
@@ -102,126 +80,150 @@ def outdoor_sky_heat_exchange(visible_surfaces_temperature, horizontal_infrared_
         short_mrt_delta = 0
 
     # calculate the influence of long-wave heat exchange with the sky
-    long_mrt_delta = longwave_mrt_delta_from_horiz_ir(horizontal_infrared_radiation, visible_surfaces_temperature,
-                                                      sky_exposure, body_emissivity)
+    long_mrt_delta = longwave_mrt_delta_from_horiz_ir(horizontal_infrared_radiation, visible_surfaces_temperature, sky_exposure, body_emissivity)
     long_effective_radiant_field = effective_radiant_field_from_mrt_delta(long_mrt_delta, fractional_efficiency)
 
     # calculate final MRT as a result of both long-wave and shortwave heat exchange
     sky_adjusted_mrt = visible_surfaces_temperature + short_mrt_delta + long_mrt_delta
+
     return sky_adjusted_mrt
 
-
+# Vectorise the outdoor_sky_heat_exchange method to speed up the calculation
 oshe = np.vectorize(outdoor_sky_heat_exchange)
 
 
-def mrt_delta_from_effective_radiant_field(effective_radiant_field, fraction_body_exposed=0.725, radiant_heat_transfer_coefficient=6.012):
-    """Calculate the mean radiant temperature (MRT) delta as a result of an ERF.
-    Args:
-        effective_radiant_field: A number representing the effective radiant field (ERF) on the
-            person in W/m2.
-        fraction_body_exposed: A number representing the fraction of the body
-            surface exposed to radiation from the environment. This is typically
-            either 0.725 for a standing or supine person or 0.696 for a seated
-            person. Default is 0.725 for a standing person.
-        radiant_heat_transfer_coefficient: A number representing the radiant heat transfer coefficient
-            in (W/m2-K).  Default is 6.012, which is almost always the case.
+def mrt_delta_from_effective_radiant_field(effective_radiant_field: float, fraction_body_exposed: float = 0.725, radiant_heat_transfer_coefficient: float = 6.012) -> float:
+    """ Calculate the mean radiant temperature (MRT) delta as a result of an ERF.
+
+    Parameters
+    ----------
+    effective_radiant_field :
+        A number representing the effective radiant field (ERF) on the person in W/m2.
+    fraction_body_exposed :
+        A number representing the fraction of the body surface exposed to radiation from the environment. This is typically either 0.725 for a standing or supine person or 0.696 for a seated person. Default is 0.725 for a standing person.
+    radiant_heat_transfer_coefficient :
+        A number representing the radiant heat transfer coefficient in (W/m2-K).  Default is 6.012, which is almost always the case.
+
+    Returns
+    -------
+    mean_radiant_temperature_delta : float
+        Uplift in MRT from effective radiant field
     """
     return effective_radiant_field / (fraction_body_exposed * radiant_heat_transfer_coefficient)
 
 
-def effective_radiant_field_from_mrt_delta(mrt_delta, fraction_body_exposed=0.725, radiant_heat_transfer_coefficient=6.012):
-    """Calculate the effective radiant field (ERF) from a MRT delta.
-    Args:
-        mrt_delta: A mean radiant temperature (MRT) delta in Kelvin or degrees Celcius.
-        fraction_body_exposed: A number representing the fraction of the body
-            surface exposed to radiation from the environment. This is typically
-            either 0.725 for a standing or supine person or 0.696 for a seated
-            person. Default is 0.725 for a standing person.
-        radiant_heat_transfer_coefficient: A number representing the radiant heat transfer coefficient
-            in (W/m2-K).  Default is 6.012, which is almost always the case.
+def effective_radiant_field_from_mrt_delta(mrt_delta: float, fraction_body_exposed: float = 0.725, radiant_heat_transfer_coefficient: float = 6.012)-> float:
+    """ Calculate the effective radiant field (ERF) from a MRT delta.
+
+    Parameters
+    ----------
+    mrt_delta : float
+        A mean radiant temperature (MRT) delta in Kelvin or degrees Celcius.
+    fraction_body_exposed : float
+        A number representing the fraction of the body surface exposed to radiation from the environment. This is typically either 0.725 for a standing or supine person or 0.696 for a seated person. Default is 0.725 for a standing person.
+    radiant_heat_transfer_coefficient : float
+        A number representing the radiant heat transfer coefficient in (W/m2-K).  Default is 6.012, which is almost always the case.
+
+    Returns
+    -------
+    effective_radiant_field : float
+        Overall ERF from MRT delta
     """
+
     return mrt_delta * fraction_body_exposed * radiant_heat_transfer_coefficient
 
 
-def longwave_mrt_delta_from_horiz_ir(horiz_ir, srfs_temp, sky_exposure=1,
-                                     body_emissivity=0.95):
-    """Calculate the MRT delta as a result of longwave radiant exchange with the sky.
-    Note that this value is typically negative since the earth (and humans)
-    tend to radiate heat out to space in the longwave portion of the spectrum.
-    Args:
-        horiz_ir: A float value that represents the downwelling horizontal
-            infrared radiation intensity in W/m2.
-        srfs_temp: The temperature of surfaces around the person in degrees
-            Celsius. This includes the ground and any other surfaces
-            blocking the view to the sky. Typically, the dry bulb temperature
-            is used when such surface temperatures are unknown.
-        sky_exposure: A number between 0 and 1 representing the fraction of the
-            sky vault in occupant’s view. Default is 1 for outdoors in an
-            open field.
+def longwave_mrt_delta_from_horiz_ir(horiz_ir: float, srfs_temp: float, sky_exposure: float = 1, body_emissivity: float = 0.95) -> float:
+    """ Calculate the MRT delta as a result of longwave radiant exchange with the sky.
+
+    Note that this value is typically negative since the earth (and humans) tend to radiate heat out to space in the longwave portion of the spectrum.
+
+    Parameters
+    ----------
+    horiz_ir : float
+        A float value that represents the downwelling horizontal infrared radiation intensity in W/m2.
+    srfs_temp : float
+        The temperature of surfaces around the person in degrees Celsius. This includes the ground and any other surfaces blocking the view to the sky. Typically, the dry bulb temperature is used when such surface temperatures are unknown.
+    sky_exposure : float
+        A number between 0 and 1 representing the fraction of the sky vault in occupant’s view. Default is 1 for outdoors in an open field.
+    body_emissivity : float
+        Default 0.95
+
+    Returns
+    -------
+    longwave_mrt_delta : float
     """
-    sky_temp = calc_sky_temperature(horiz_ir, body_emissivity)
+
+    sky_temp = sky_temperature(horiz_ir, body_emissivity)
     return longwave_mrt_delta_from_sky_temp(sky_temp, srfs_temp, sky_exposure)
 
 
-def longwave_mrt_delta_from_sky_temp(sky_temp, srfs_temp, sky_exposure=1):
-    """Calculate the MRT delta as a result of longwave radiant exchange with the sky.
-    Note that this value is typically negative since the earth (and humans)
-    tend to radiate heat out to space in the longwave portion of the spectrum.
-    Args:
-        sky_temp: The sky temperature in degrees Celcius.
-        srfs_temp: The temperature of surfaces around the person in degrees
-            Celcius. This includes the ground and any other surfaces
-            blocking the view to the sky. Typically, the dry bulb temperature
-            is used when such surface temperatures are unknown.
-        sky_exposure: A number between 0 and 1 representing the fraction of the
-            sky vault in occupant’s view. Default is 1 for outdoors in an
-            open field.
+def longwave_mrt_delta_from_sky_temp(sky_temp: float, srfs_temp: float, sky_exposure: float = 1) -> float:
+    """ Calculate the MRT delta as a result of longwave radiant exchange with the sky.
+
+    Note that this value is typically negative since the earth (and humans) tend to radiate heat out to space in the longwave portion of the spectrum.
+
+    Parameters
+    ----------
+    sky_temp : float
+        The sky temperature in degrees Celcius.
+    srfs_temp : float
+        The temperature of surfaces around the person in degrees Celcius. This includes the ground and any other surfaces blocking the view to the sky. Typically, the dry bulb temperature is used when such surface temperatures are unknown.
+    sky_exposure : float
+        A number between 0 and 1 representing the fraction of the sky vault in occupant’s view. Default is 1 for outdoors in an open field.
+
+    Returns
+    -------
+    longwave_mrt_delta : float
+
     """
+
     return 0.5 * sky_exposure * (sky_temp - srfs_temp)
 
 
-def effective_radiant_field_from_body_solar_flux(solar_flux, body_absorptivity=0.7, body_emissivity=0.95):
-    """Calculate effective radiant field (ERF) from incident solar flux on body in W/m2.
-    Args:
-        solar_flux: A number for the average solar flux over the human body in W/m2.
-        body_absorptivity: A number between 0 and 1 representing the average
-            shortwave absorptivity of the body (including clothing and skin color).
-            Typical clothing values - white: 0.2, khaki: 0.57, black: 0.88
-            Typical skin values - white: 0.57, brown: 0.65, black: 0.84
-            Default is 0.7 for average (brown) skin and medium clothing.
-        body_emissivity: A number between 0 and 1 representing the average
-            long-wave emissivity of the body.  Default is 0.95, which is almost
-            always the case except in rare situations of wearing metalic clothing.
+def effective_radiant_field_from_body_solar_flux(solar_flux: float, body_absorptivity: float = 0.7, body_emissivity: float = 0.95) -> float:
+    """ Calculate effective radiant field (ERF) from incident solar flux on body in W/m2.
+
+    Parameters
+    ----------
+    solar_flux : float
+        A number for the average solar flux over the human body in W/m2.
+    body_absorptivity : float
+        A number between 0 and 1 representing the average shortwave absorptivity of the body (including clothing and skin color). Typical clothing values - white: 0.2, khaki: 0.57, black: 0.88 Typical skin values - white: 0.57, brown: 0.65, black: 0.84 Default is 0.7 for average (brown) skin and medium clothing.
+    body_emissivity : float
+        A number between 0 and 1 representing the average long-wave emissivity of the body.  Default is 0.95, which is almost always the case except in rare situations of wearing metalic clothing.
+    Returns
+    -------
+    effective_radiant_field : float
     """
     return solar_flux * (body_absorptivity / body_emissivity)
 
 
-def body_solar_flux_from_parts(diffuse_horizontal_solar_radiation, direct_normal_solar_radiation, altitude,
-                               sharp=135, sky_exposure=1, fract_exposed=1,
-                               floor_reflectance=0.25, posture='standing'):
-    """Estimate the total solar flux on human geometry from solar components.
-    Args:
-        diffuse_horizontal_solar_radiation: Diffuse horizontal solar irradiance in W/m2.
-        direct_normal_solar_radiation: Direct normal solar irradiance in W/m2.
-        altitude: The altitude of the sun in degrees [0-90].
-        sharp: A number between 0 and 180 representing the solar horizontal
-            angle relative to front of person (SHARP). 0 signifies sun that is
-            shining directly into the person's face and 180 signifies sun that
-            is shining at the person's back. Default is 135, asuming that a person
-            typically faces their side or back to the sun to avoid glare.
-        sky_exposure: A number between 0 and 1 representing the fraction of the
-            sky vault in occupant’s view. Default is 1 for outdoors in an
-            open field.
-        fract_exposed: A number between 0 and 1 representing the fraction of
-            the body exposed to direct sunlight. Note that this does not include the
-            body’s self-shading; only the shading from surroundings.
-            Default is 1 for a person standing in an open area.
-        floor_reflectance: A number between 0 and 1 the represents the
-            reflectance of the floor. Default is for 0.25 which is characteristic
-            of outdoor grass or dry bare soil.
-        posture: A text string indicating the posture of the body. Letters must
-            be lowercase.  Choose from the following: "standing", "seated", "supine".
-            Default is "standing".
+def body_solar_flux_from_parts(diffuse_horizontal_solar_radiation: float, direct_normal_solar_radiation: float, altitude: float, sharp: float = 135, sky_exposure: float = 1, fract_exposed: float = 1, floor_reflectance: float = 0.25, posture: str = 'standing') -> float:
+    """ Estimate the total solar flux on human geometry from solar components.
+
+    Parameters
+    ----------
+    diffuse_horizontal_solar_radiation : float
+        Diffuse horizontal solar irradiance in W/m2.
+    direct_normal_solar_radiation : float
+        Direct normal solar irradiance in W/m2.
+    altitude : float
+        The altitude of the sun in degrees [0-90].
+    sharp : float
+        A number between 0 and 180 representing the solar horizontal angle relative to front of person (SHARP). 0 signifies sun that is shining directly into the person's face and 180 signifies sun that is shining at the person's back. Default is 135, asuming that a person typically faces their side or back to the sun to avoid glare.
+    sky_exposure : float
+        A number between 0 and 1 representing the fraction of the sky vault in occupant’s view. Default is 1 for outdoors in an open field.
+    fract_exposed : float
+        A number between 0 and 1 representing the fraction of the body exposed to direct sunlight. Note that this does not include the body’s self-shading; only the shading from surroundings. Default is 1 for a person standing in an open area.
+    floor_reflectance : float
+        A number between 0 and 1 the represents the reflectance of the floor. Default is for 0.25 which is characteristic of outdoor grass or dry bare soil.
+    posture : str
+        A text string indicating the posture of the body. Letters must be lowercase.  Choose from the following: "standing", "seated", "supine". Default is "standing".
+    Returns
+    -------
+    body_solar_flux : float
+
     """
     fract_eff = 0.696 if posture == 'seated' else 0.725
     glob_horiz = diffuse_horizontal_solar_radiation + (direct_normal_solar_radiation * np.sin(np.radians(altitude)))
@@ -234,32 +236,31 @@ def body_solar_flux_from_parts(diffuse_horizontal_solar_radiation, direct_normal
     return dir_solar + diff_solar + ref_solar
 
 
-def body_solar_flux_from_horiz_parts(diffuse_horizontal_solar_radiation, dir_horiz_solar, altitude,
-                                     sharp=135, fract_exposed=1,
-                                     floor_reflectance=0.25, posture='standing'):
-    """Estimate total solar flux on human geometry from horizontal solar components.
-    This method is useful for cases when one wants to take the hourly results
-    of a spatial radiation study with Radiance and use them to build a map
-    of ERF or MRT delta on a person.
-    Args:
-        diffuse_horizontal_solar_radiation: Diffuse horizontal solar irradiance in W/m2.
-        dir_horiz_solar: Direct horizontal solar irradiance in W/m2.
-        altitude: The altitude of the sun in degrees [0-90].
-        sharp: A number between 0 and 180 representing the solar horizontal
-            angle relative to front of person (SHARP). 0 signifies sun that is
-            shining directly into the person's face and 180 signifies sun that
-            is shining at the person's back. Default is 135, asuming that a person
-            typically faces their side or back to the sun to avoid glare.
-        fract_exposed: A number between 0 and 1 representing the fraction of
-            the body exposed to direct sunlight. Note that this does not include the
-            body’s self-shading; only the shading from surroundings.
-            Default is 1 for a person standing in an open area.
-        floor_reflectance: A number between 0 and 1 the represents the
-            reflectance of the floor. Default is for 0.25 which is characteristic
-            of outdoor grass or dry bare soil.
-        posture: A text string indicating the posture of the body. Letters must
-            be lowercase.  Choose from the following: "standing", "seated", "supine".
-            Default is "standing".
+def body_solar_flux_from_horiz_parts(diffuse_horizontal_solar_radiation: float, dir_horiz_solar: float, altitude: float, sharp: float = 135, fract_exposed: float = 1, floor_reflectance: float = 0.25, posture: str = 'standing') -> float:
+    """ Estimate total solar flux on human geometry from horizontal solar components.
+
+    This method is useful for cases when one wants to take the hourly results of a spatial radiation study with Radiance and use them to build a map of ERF or MRT delta on a person.
+
+    Parameters
+    ----------
+    diffuse_horizontal_solar_radiation : float
+        Diffuse horizontal solar irradiance in W/m2.
+    dir_horiz_solar : float
+        Direct horizontal solar irradiance in W/m2.
+    altitude : float
+        The altitude of the sun in degrees [0-90].
+    sharp : float
+        A number between 0 and 180 representing the solar horizontal angle relative to front of person (SHARP). 0 signifies sun that is shining directly into the person's face and 180 signifies sun that is shining at the person's back. Default is 135, asuming that a person typically faces their side or back to the sun to avoid glare.
+    fract_exposed : float
+        A number between 0 and 1 representing the fraction of the body exposed to direct sunlight. Note that this does not include the body’s self-shading; only the shading from surroundings. Default is 1 for a person standing in an open area.
+    floor_reflectance : float
+        A number between 0 and 1 the represents the reflectance of the floor. Default is for 0.25 which is characteristic of outdoor grass or dry bare soil.
+    posture : str
+        A text string indicating the posture of the body. Letters must be lowercase.  Choose from the following: "standing", "seated", "supine". Default is "standing".
+    Returns
+    -------
+    body_solar_flux : float
+
     """
     fract_eff = 0.696 if posture == 'seated' else 0.725
     glob_horiz = diffuse_horizontal_solar_radiation + dir_horiz_solar
@@ -271,96 +272,106 @@ def body_solar_flux_from_horiz_parts(diffuse_horizontal_solar_radiation, dir_hor
     return dir_solar + diff_solar + ref_solar
 
 
-def body_diff_from_diff_horiz(diffuse_horizontal_solar_radiation, sky_exposure=1, fraction_body_exposed=0.725):
-    """Estimate the diffuse solar flux on human geometry from diffuse horizontal solar.
-    Args:
-        diffuse_horizontal_solar_radiation: Diffuse horizontal solar irradiance in W/m2.
-        sky_exposure: A number between 0 and 1 representing the fraction of the
-            sky vault in occupant’s view. Default is 1 for outdoors in an
-            open field.
-        fraction_body_exposed: A number representing the fraction of the body
-            surface exposed to radiation from the environment. This is typically
-            either 0.725 for a standing or supine person or 0.696 for a seated
-            person. Default is 0.725 for a standing person.
+def body_diff_from_diff_horiz(diffuse_horizontal_solar_radiation: float, sky_exposure: float = 1, fraction_body_exposed: float = 0.725) -> float:
+    """ Estimate the diffuse solar flux on human geometry from diffuse horizontal solar.
+
+    Parameters
+    ----------
+    diffuse_horizontal_solar_radiation : float
+        Diffuse horizontal solar irradiance in W/m2.
+    sky_exposure : float
+        A number between 0 and 1 representing the fraction of the sky vault in occupant’s view. Default is 1 for outdoors in an open field.
+    fraction_body_exposed : float
+        A number representing the fraction of the body surface exposed to radiation from the environment. This is typically either 0.725 for a standing or supine person or 0.696 for a seated person. Default is 0.725 for a standing person.
+    Returns
+    -------
+    diffuse solar flux : float
+
     """
     return 0.5 * sky_exposure * fraction_body_exposed * diffuse_horizontal_solar_radiation
 
 
-def body_ref_from_glob_horiz(glob_horiz_solar, floor_reflectance=0.25,
-                             sky_exposure=1, fraction_body_exposed=0.725):
-    """Estimate floor-reflected solar flux on human geometry from global horizontal solar.
-    Args:
-        glob_horiz_solar: Global horizontal solar irradiance in W/m2.
-        floor_reflectance: A number between 0 and 1 the represents the
-            reflectance of the floor. Default is for 0.25 which is characteristic
-            of outdoor grass or dry bare soil.
-        sky_exposure: A number between 0 and 1 representing the fraction of the
-            sky vault in occupant’s view. Default is 1 for outdoors in an
-            open field.
-        fraction_body_exposed: A number representing the fraction of the body
-            surface exposed to radiation from the environment. This is typically
-            either 0.725 for a standing or supine person or 0.696 for a seated
-            person. Default is 0.725 for a standing person.
+def body_ref_from_glob_horiz(glob_horiz_solar: float, floor_reflectance: float = 0.25, sky_exposure: float = 1, fraction_body_exposed: float = 0.725) -> float:
+    """ Estimate floor-reflected solar flux on human geometry from global horizontal solar.
+
+    Parameters
+    ----------
+    glob_horiz_solar : float
+        Global horizontal solar irradiance in W/m2.
+    floor_reflectance : float
+        A number between 0 and 1 the represents the reflectance of the floor. Default is for 0.25 which is characteristic of outdoor grass or dry bare soil.
+    sky_exposure : float
+        A number between 0 and 1 representing the fraction of the sky vault in occupant’s view. Default is 1 for outdoors in an open field.
+    fraction_body_exposed : float
+        A number representing the fraction of the body surface exposed to radiation from the environment. This is typically either 0.725 for a standing or supine person or 0.696 for a seated person. Default is 0.725 for a standing person.
+    Returns
+    -------
+    floor-reflected solar flux : float
+
     """
     return 0.5 * sky_exposure * fraction_body_exposed * glob_horiz_solar * floor_reflectance
 
 
-def body_dir_from_dir_horiz(dir_horiz_solar, altitude, sharp=135,
-                            posture='standing', fract_exposed=1):
-    """Estimate the direct solar flux on human geometry from direct horizontal solar.
-    Args:
-        dir_horiz_solar: Direct horizontal solar irradiance in W/m2.
-        altitude: A number between 0 and 90 representing the altitude of the
-            sun in degrees.
-        sharp: A number between 0 and 180 representing the solar horizontal
-            angle relative to front of person (SHARP). 0 signifies sun that is
-            shining directly into the person's face and 180 signifies sun that
-            is shining at the person's back. Default is 135, asuming that a person
-            typically faces their side or back to the sun to avoid glare.
-        posture: A text string indicating the posture of the body. Letters must
-            be lowercase.  Choose from the following: "standing", "seated", "supine".
-            Default is "standing".
-        fract_exposed: A number between 0 and 1 representing the fraction of
-            the body exposed to direct sunlight. Note that this does not include
-            the body’s self-shading; only the shading from surroundings.
-            Default is 1 for a person in an open area.
+def body_dir_from_dir_horiz(dir_horiz_solar: float, altitude: float, sharp: float = 135, posture: str = 'standing', fract_exposed: float = 1) -> float:
+    """ Estimate the direct solar flux on human geometry from direct horizontal solar.
+
+    Parameters
+    ----------
+    dir_horiz_solar : float
+        Direct horizontal solar irradiance in W/m2.
+    altitude : float
+        A number between 0 and 90 representing the altitude of the sun in degrees.
+    sharp : float
+        A number between 0 and 180 representing the solar horizontal angle relative to front of person (SHARP). 0 signifies sun that is shining directly into the person's face and 180 signifies sun that is shining at the person's back. Default is 135, asuming that a person typically faces their side or back to the sun to avoid glare.
+    posture : str
+        A text string indicating the posture of the body. Letters must be lowercase.  Choose from the following: "standing", "seated", "supine". Default is "standing".
+    fract_exposed : float
+        A number between 0 and 1 representing the fraction of the body exposed to direct sunlight. Note that this does not include the body’s self-shading; only the shading from surroundings. Default is 1 for a person in an open area.
+    Returns
+    -------
+    direct solar flux : float
+
     """
     proj_fac = get_projection_factor_simple(altitude, sharp, posture)
     direct_normal_solar_radiation = dir_horiz_solar / np.sin(np.radians(altitude))
     return proj_fac * fract_exposed * direct_normal_solar_radiation
 
 
-def body_dir_from_dir_normal(direct_normal_solar_radiation, altitude, sharp=135,
-                             posture='standing', fract_exposed=1):
-    """Estimate the direct solar flux on human geometry from direct horizontal solar.
-    Args:
-        direct_normal_solar_radiation: Direct normal solar irradiance in W/m2.
-        altitude: A number between 0 and 90 representing the altitude of the
-            sun in degrees.
-        sharp: A number between 0 and 180 representing the solar horizontal
-            angle relative to front of person (SHARP). 0 signifies sun that is
-            shining directly into the person's face and 180 signifies sun that
-            is shining at the person's back. Default is 135, asuming that a person
-            typically faces their side or back to the sun to avoid glare.
-        posture: A text string indicating the posture of the body. Letters must
-            be lowercase.  Choose from the following: "standing", "seated", "supine".
-            Default is "standing".
-        fract_exposed: A number between 0 and 1 representing the fraction of
-            the body exposed to direct sunlight. Note that this does not include
-            the body’s self-shading; only the shading from surroundings.
-            Default is 1 for a person in an open area.
+def body_dir_from_dir_normal(direct_normal_solar_radiation: float, altitude: float, sharp: float = 135, posture: str = 'standing', fract_exposed: float = 1) -> float:
+    """ Estimate the direct solar flux on human geometry from direct horizontal solar.
+    Parameters
+    ----------
+    direct_normal_solar_radiation : float
+        Direct normal solar irradiance in W/m2.
+    altitude : float
+        A number between 0 and 90 representing the altitude of the  in degrees.
+    sharp : float
+        A number between 0 and 180 representing the solar horizontal angle relative to front of person (SHARP). 0 signifies sun that is shining directly into the person's face and 180 signifies sun that is shining at the person's back. Default is 135, asuming that a person typically faces their side or back to the sun to avoid glare.
+    posture : float
+        A text string indicating the posture of the body. Letters must be lowercase.  Choose from the following: "standing", "seated", "supine". Default is "standing".
+    fract_exposed : float
+        A number between 0 and 1 representing the fraction of the body exposed to direct sunlight. Note that this does not include the body’s self-shading; only the shading from surroundings. Default is 1 for a person in an open area.
+    Returns
+    -------
+    direct solar flux : float
+
     """
     proj_fac = get_projection_factor_simple(altitude, sharp, posture)
     return proj_fac * fract_exposed * direct_normal_solar_radiation
 
 
-def sharp_from_solar_and_body_azimuth(solar_azimuth, body_azimuth=0):
-    """Calculate solar horizontal angle relative to front of person (SHARP).
-    Args:
-        solar_azimuth: A number between 0 and 360 representing the solar azimuth
-            in degrees (0=North, 90=East, 180=South, 270=West).
-        body_azimuth: A number between 0 and 360 representing the direction that
-            the human is facing in degrees (0=North, 90=East, 180=South, 270=West).
+def sharp_from_solar_and_body_azimuth(solar_azimuth: float, body_azimuth: float = 0) -> float:
+    """ Calculate solar horizontal angle relative to front of person (SHARP).
+    Parameters
+    ----------
+    solar_azimuth : float
+        A number between 0 and 360 representing the solar azimuth in degrees (0=North, 90=East, 180=South, 270=West).
+    body_azimuth : float
+        A number between 0 and 360 representing the direction that the human is facing in degrees (0=North, 90=East, 180=South, 270=West).
+    Returns
+    -------
+    SHARP : float
+
     """
     angle_diff = abs(solar_azimuth - body_azimuth)
     if angle_diff <= 180:
@@ -369,23 +380,25 @@ def sharp_from_solar_and_body_azimuth(solar_azimuth, body_azimuth=0):
         return 360 - angle_diff
 
 
-def get_projection_factor_simple(altitude, sharp=135, posture='standing'):
-    """Get the fraction of body surface area exposed to direct sun using a simpler method.
-    This is effectively Ap / Ad in the original Solarcal equations.
-    This is a more portable version of the get_projection_area() function
-    since it does not rely on the large matrix of projection factors
-    stored externally in csv files. However, it is less precise since it
-    effectively interpolates over the missing parts of the matrix. So this is
-    only recommended for cases where such csv files are missing.
-    Args:
-        altitude: A number between 0 and 90 representing the altitude of the
-            sun in degrees.
-        sharp: A number between 0 and 180 representing the solar horizontal
-            angle relative to front of person (SHARP). Default is 135, asuming
-            a person typically faces their side or back to the sun to avoid glare.
-        posture: A text string indicating the posture of the body. Letters must
-            be lowercase.  Choose from the following: "standing", "seated", "supine".
-            Default is "standing".
+def get_projection_factor_simple(altitude: float, sharp: int = 135, posture: str = 'standing') -> float:
+    """ Get the fraction of body surface area exposed to direct sun using a simpler method.
+
+    This is effectively Ap / Ad in the original SolarCal equations.
+
+    This is a more portable version of the get_projection_area() function since it does not rely on the large matrix of projection factors stored externally in csv files. However, it is less precise since it effectively interpolates over the missing parts of the matrix. So this is only recommended for cases where such csv files are missing.
+
+    Parameters
+    -------
+    altitude : float
+        A number between 0 and 90 representing the altitude of the sun in degrees.
+    sharp : int
+        A number between 0 and 180 representing the solar horizontal angle relative to front of person (SHARP). Default is 135, asuming a person typically faces their side or back to the sun to avoid glare.
+    posture : float
+        A text string indicating the posture of the body. Letters must be lowercase.  Choose from the following: "standing", "seated", "supine". Default is "standing".
+    Returns
+    -------
+    projection_factor : float
+
     """
     if posture == 'supine':
         altitude, sharp = transpose_altitude_azimuth(altitude, sharp)
@@ -454,10 +467,20 @@ def get_projection_factor_simple(altitude, sharp=135, posture='standing'):
     return ap
 
 
-def transpose_altitude_azimuth(altitude, azimuth):
-    """Transpose altitude and azimuth.
-    This is necessary for getting correct projection factors for a supine posture
-    from the standing posture matrix.
+def transpose_altitude_azimuth(altitude: float, azimuth: float) -> float:
+    """ Transpose altitude and azimuth.
+    This is necessary for getting correct projection factors for a supine posture from the standing posture matrix.
+    Parameters
+    ----------
+    altitude : float
+        Solar altitude
+    azimuth : float
+        Solar azimuth
+    Returns
+    -------
+    altitude, azimuth
+        Transposed altitude and azimuths
+
     """
     alt_temp = altitude
     altitude = abs(90 - azimuth)

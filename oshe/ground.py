@@ -10,7 +10,7 @@ from .surface_temperature import open_field_ground_surface_temperature
 from .radiation import open_field_radiation
 from .mrt import mean_radiant_temperature
 from .utci import universal_thermal_climate_index
-from .oshe import calc_sky_temperature
+from .oshe import sky_temperature
 
 
 class Ground(object):
@@ -200,7 +200,7 @@ class Ground(object):
         self.ground_surface_temperature = self.srf_temp(epw_file, idd_file, case_name, output_directory, shaded)
 
         # Calculate annual hourly sky temperature
-        sky_temp = calc_sky_temperature(self.horizontal_infrared_radiation_intensity)
+        sky_temp = sky_temperature(self.horizontal_infrared_radiation_intensity)
 
         # Join surface tempertaures
         all_srf_temps = np.vstack([self.ground_surface_temperature, sky_temp])
