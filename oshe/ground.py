@@ -10,6 +10,7 @@ from .surface_temperature import open_field_ground_surface_temperature
 from .radiation import open_field_radiation
 from .mrt import mean_radiant_temperature
 from .utci import universal_thermal_climate_index
+from .oshe import calc_sky_temperature
 
 
 class Ground(object):
@@ -143,7 +144,7 @@ class Ground(object):
         self.sun_altitude = None
         self.radiation_direct = None
         self.radiation_diffuse = None
-        self.surface_temperature = None
+        self.ground_surface_temperature = None
         self.dry_bulb_temperature = None
         self.relative_humidity = None
         self.wind_speed = None
@@ -164,7 +165,7 @@ class Ground(object):
 
     def srf_temp(self, epw_file: str, idd_file: str, case_name: str = None, output_directory: str = None, shaded: bool = False):
         # Calculate annual hourly ground surface temperatures
-        self.surface_temperature = open_field_ground_surface_temperature(
+        self.ground_surface_temperature = open_field_ground_surface_temperature(
             epw_file=epw_file,
             idd_file=idd_file,
             case_name=case_name,
@@ -179,16 +180,36 @@ class Ground(object):
             solar_absorptance=self.solar_absorptance,
             visible_absorptance=self.visible_absorptance
         )
-        self.df_surface_temperature = pd.Series(self.surface_temperature[0], name="surface_temperature", index=self.index).to_frame()
-        return self.surface_temperature
+        self.df_surface_temperature = pd.Series(self.ground_surface_temperature[0], name="ground_surface_temperature", index=self.index).to_frame()
+        print("Surface temperature calculated for {}".format(self.name))
+        return self.ground_surface_temperature
 
     def mrt(self, epw_file: str, idd_file: str, case_name: str = None, output_directory: str = None, shaded: bool = False, write: bool = True):
 
         case_name = "open_field" if case_name is None else case_name
         output_directory = pathlib.Path(tempfile.gettempdir()) if output_directory is None else pathlib.Path(output_directory)
 
-        # Calculate annual hourly ground surface temperatures
-        self.surface_temperature = self.srf_temp(epw_file, idd_file, case_name, output_directory, shaded)
+        # Load weatherfile variables
+        epw = EPW(epw_file)
+        self.dry_bulb_temperature = np.array(epw.dry_bulb_temperature.values)
+        self.horizontal_infrared_radiation_intensity = np.array(epw.horizontal_infrared_radiation_intensity.values)
+        sun_path = Sunpath.from_location(epw.location)
+        self.sun_altitude = np.array([sun_path.calculate_sun_from_hoy(i).altitude for i in range(8760)])
+
+        # Load annual hourly ground surface temperatures
+        self.ground_surface_temperature = self.srf_temp(epw_file, idd_file, case_name, output_directory, shaded)
+
+        # Calculate annual hourly sky temperature
+        sky_temp = calc_sky_temperature(self.horizontal_infrared_radiation_intensity)
+
+        # Join surface tempertaures
+        all_srf_temps = np.vstack([self.ground_surface_temperature, sky_temp])
+
+        # Create sky and ground view factors
+        view_factors = np.array([0.9, 0.1]) # Make ground a larger impactor of comfort than sky
+
+        # Calculate surrounding surface temperatures including sky
+        surrounding_surface_temperatures = np.power(np.matmul(view_factors.T, np.power(all_srf_temps.T + 273.15, 4).T), 0.25) - 273.15
 
         # Calculate annual hourly incident radiation
         self.radiation_direct, self.radiation_diffuse = open_field_radiation(
@@ -203,30 +224,21 @@ class Ground(object):
         self.radiation_direct = self.radiation_direct.T[0]
         self.radiation_diffuse = self.radiation_diffuse.T[0]
 
-        # Load weatherfile variables
-        epw = EPW(epw_file)
-        self.dry_bulb_temperature = np.array(epw.dry_bulb_temperature.values)
-        self.horizontal_infrared_radiation_intensity = np.array(epw.horizontal_infrared_radiation_intensity.values)
-        sun_path = Sunpath.from_location(epw.location)
-        self.sun_altitude = np.array([sun_path.calculate_sun_from_hoy(i).altitude for i in range(8760)])
-
-        # Calculate longwave MRT using average between ground surface temperature and air temperature (as ground is only visible to bottom half)
-        lw_mrt = self.surface_temperature# np.stack([self.surface_temperature[0], self.dry_bulb_temperature]).mean(axis=0)
-
         # Calculate annual hourly MRT
         self.mean_radiant_temperature = mean_radiant_temperature(
-            longwave_mean_radiant_temperature=lw_mrt,
+            surrounding_surfaces_temperature=surrounding_surface_temperatures,
             horizontal_infrared_radiation_intensity=self.horizontal_infrared_radiation_intensity,
             diffuse_horizontal_solar=self.radiation_diffuse,
             direct_normal_solar=self.radiation_direct,
             sun_altitude=self.sun_altitude,
-            ground_reflectivity=0,
-            sky_exposure=0 if shaded else 1
+            ground_reflectivity=self.reflectivity,#0,
+            sky_exposure=0 if shaded else 1,
+            radiance=True
         )[0]
 
         if write:
             mrt_file = str(output_directory / case_name) + "/" + str(case_name) + ".mrt"
-            self.df_mrt = pd.Series(self.mean_radiant_temperature[0], name="mean_radiant_temperature", index=self.index).to_frame()
+            self.df_mrt = pd.Series(self.mean_radiant_temperature, name="mean_radiant_temperature", index=self.index).to_frame()
             self.df_mrt.round(3).to_csv(mrt_file, index=False)
             print("MRT file written to {}".format(mrt_file))
 
@@ -252,7 +264,8 @@ class Ground(object):
             case_name=case_name,
             output_directory=output_directory,
             shaded=shaded,
-            write=write)
+            write=write
+        )
 
         # Calculate UTCI
         self.universal_thermal_climate_index = universal_thermal_climate_index(
@@ -264,7 +277,7 @@ class Ground(object):
 
         if write:
             utci_file = str(output_directory / case_name) + "/" + str(case_name) + ".utci"
-            self.df_utci = pd.Series(self.universal_thermal_climate_index[0], name="universal_thermal_climate_index", index=self.index).to_frame()
+            self.df_utci = pd.Series(self.universal_thermal_climate_index, name="universal_thermal_climate_index", index=self.index).to_frame()
             self.df_utci.round(3).to_csv(utci_file, index=False)
             print("UTCI file written to {}".format(utci_file))
 

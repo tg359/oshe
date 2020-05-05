@@ -1,0 +1,7 @@
+
+lpython:S107“"MMethod "plot_plan" has 13 parameters, which is greater than the 7 authorized.(µ’İ8¨´»¨—.
+Mpython:S1481Š"-Remove the unused local variable "month_idx".(œŠµ¢8¯»Ñ—.
+qpython:S107ı"YMethod "utci_reduction_heatmap" has 8 parameters, which is greater than the 7 authorized.(ÂõÈû
+<python:S125è"Remove this commented out code.(ºñæˆÿÿÿÿÿ
+mpython:S3776“"TRefactor this function to reduce its Cognitive Complexity from 29 to the 15 allowed.(µ’İ
+@python:S1481¹"'Remove the unused local variable "tcl".(æ¡ÕÑ
