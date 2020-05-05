@@ -11,10 +11,69 @@ register_matplotlib_converters()
 
 from .helpers import chunk
 
+class UTCI_(object):
+    def __init__(self, utci_openfield, utci_points, points):
+        self.index = pd.date_range(start="2018-01-01 00:30:00", freq="60T", periods=8760, closed="left")
+        self.utci_openfield = pd.Series(utci_openfield, index=self.index)  # List of hourly annual UTCI values
+        self.utci_points = pd.DataFrame(utci_points.T, index=self.index)  # array of point/hour values for year
+        self.points = pd.DataFrame(points, columns=["x", "y", "z"])  # array of point locations (x, y, z)
+        self.utci_difference = pd.DataFrame((utci_openfield - utci_points).T, index=self.index)  # Difference between open field and simulated points
+
+        # Time filter masks
+
+        self.masks = {
+            "Daily": ((self.index.hour >= 0) & (self.index.hour <= 24)),
+            "Morning": ((self.index.hour >= 5) & (self.index.hour <= 10)),
+            "Midday": ((self.index.hour >= 11) & (self.index.hour <= 13)),
+            "Afternoon": ((self.index.hour >= 14) & (self.index.hour <= 18)),
+            "Evening": ((self.index.hour >= 19) & (self.index.hour <= 22)),
+            "Night": ((self.index.hour >= 23) | (self.index.hour <= 4)),
+
+            "Annual": (self.index.month <= 12),
+            "Spring": ((self.index.month >= 3) & (self.index.month <= 5)),
+            "Summer": ((self.index.month >= 6) & (self.index.month <= 8)),
+            "Autumn": ((self.index.month >= 9) & (self.index.month <= 11)),
+            "Winter": ((self.index.month <= 2) | (self.index.month >= 12)),
+
+            "May": (self.index.month == 5),
+            "October": (self.index.month == 10),
+            "May & October": ((self.index.month == 5) | (self.index.month == 10)),
+
+            "Morning Shoulder": ((self.index.hour >= 7) & (self.index.hour <= 10)),
+            "Afternoon Shoulder": ((self.index.hour >= 16) & (self.index.hour <= 20)),
+            "Morning & Afternoon Shoulder": (((self.index.hour >= 7) & (self.index.hour <= 10)) | ((self.index.hour >= 16) & (self.index.hour <= 20))),
+
+            # "May - Morning "
+
+
+        }
+
+        # Comfort levels within time periods
+
+    def comfort(self, months=np.arange(1, 13, 1), hours=np.arange(0, 24, 1), lower=9, upper=28):
+        # Create hour mask for year for selected time periods
+        time_mask = self.index.hour.isin(hours) & self.index.month.isin(months)
+        count = time_mask.sum()
+
+        # Filter the dataset by time
+        a = self.utci_points[time_mask]
+
+        # Filter the remaining data by comfort
+        comfortable_mask = (a >= lower) & (a <= upper)
+        b = a[comfortable_mask]
+
+        # Count number of potential values
+        count_remaining = b.count()
+
+        # Get proportion of comfortable hours in period
+        c = count_remaining / count
+
+        return c
+
 
 class UTCI(object):
 
-    def __init__(self, utci_openfield, utci_points, points, comfort_lim=[8.5, 28.5], reduction_lim=4):
+    def __init__(self, utci_openfield, utci_points, points, comfort_lim=[9, 28], reduction_lim=4):
         self.index = pd.date_range(start="2018-01-01 01:00:00", end="2019-01-01 01:00:00", freq="60T", closed="left")
         self.utci_openfield = utci_openfield  # List of hourly annual UTCI values
         self.utci_points = utci_points  # array of point/hour values for year
@@ -33,8 +92,6 @@ class UTCI(object):
         self.october = self.index.month == 10
         self.openfield_comfort = (utci_openfield >= 9) & (utci_openfield <= 26)
         self.openfield_comfort_plus = (utci_openfield >= 9) & (utci_openfield <= 28)
-
-        # To add using methods
 
         # Values
         self.may_morning_comfort = None
