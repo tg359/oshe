@@ -3,8 +3,12 @@ import pandas as pd
 import numpy as np
 
 import matplotlib.pyplot as plt
+from matplotlib.collections import PatchCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
 from matplotlib import dates
+from matplotlib.patches import Patch, Polygon, Path, PathPatch
+
+from .helpers import chunk
 
 # General housework
 pd.plotting.register_matplotlib_converters()
@@ -142,6 +146,141 @@ class UTCI(object):
             temp_filtered = temp[i]
             d[j][k] = ((temp_filtered >= threshold).sum() / temp_filtered.count())
         return pd.DataFrame.from_dict(d)
+
+
+def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING", "generic_wall"], underlay=True):
+    """ Load the radiance geometry into a dictionary, containing vertex groups and materials names as key
+
+    Parameters
+    ----------
+    rad_files
+    exclude
+
+    Returns
+    -------
+    Dictionary containing faces
+
+    """
+    # TODO - This method is very messy ... but it works. Needs rethinking almost entirely
+    materials = []
+    vertices = []
+    for rad_file in rad_files:
+
+        # Open RAD file containing geometry
+        with open(rad_file, "r") as f:
+            opq = [i.strip() for i in f.readlines()]
+
+        # For each RAD geometry object, get the vertices describing the polygon and material name
+        for geo in chunk(opq[3:], n=4):
+            materials.append(geo[0].split(" ")[0])
+            vertices.append(np.array(chunk([float(i) for i in geo[-1].split(" ")[1:]], n=3))[:, :2].tolist())
+
+    # Create list of unique materials
+    geo_materials = list(np.unique(materials))
+
+    # Sort the vertices and materials to populate the dataset
+    geo_data = {}
+    for ii in geo_materials:
+        if ii not in exclude:
+            geo_data[ii] = {"vertices": []}
+    for v, m in list(zip(*[vertices, materials])):
+        if m not in exclude:
+            geo_data[m]["vertices"].append(list(v))
+
+    # Default material properties - modify these to format the context geometry
+    material_properties = {
+        "BDG_CONTEXT": {
+            "alpha": 1.0, 
+            "fc": "#BEBEBE", 
+            "zorder": 2, 
+            "lw": 1.0, 
+            "ec": "#BEBEBE", 
+            "ls": "-", 
+            "name": "Building"},
+        "GND_CONCRETE": {
+            "alpha": 1.0, 
+            "fc": "#BEBEBE", 
+            "zorder": 1, 
+            "lw": 0.25, 
+            "ec": "#BEBEBE", 
+            "ls": ":", 
+            "name": "Concrete"},
+        "GND_GRASS": {
+            "alpha": 1.0, 
+            "fc": "#005800", 
+            "zorder": 1, 
+            "lw": 0.25, 
+            "ec": "#005800", 
+            "ls": ":", 
+            "name": "Grass"},
+        "GND_STONE": {
+            "alpha": 1.0, 
+            "fc": "#FFDEAD", 
+            "zorder": 4, 
+            "lw": 0.75, 
+            "ec": "#FFDEAD", 
+            "ls": ":", 
+            "name": "Stone"},
+        "GND_SAND": {
+            "alpha": 1.0,
+            "fc": "#FFF2DE",
+            "zorder": 4,
+            "lw": 0.75,
+            "ec": "#FFF2DE",
+            "ls": ":",
+            "name": "Sand"},
+        "GND_WATER": {
+            "alpha": 1.0, 
+            "fc": "#3FBFBF", 
+            "zorder": 1, 
+            "lw": 0.25, 
+            "ec": "#3FBFBF", 
+            "ls": ":", 
+            "name": "Water"},
+        "SHD_SOLID": {
+            "alpha": 0.8, 
+            "fc": "#696969", 
+            "zorder": 3, 
+            "lw": 1.0, 
+            "ec": "#696969", 
+            "ls": "-", 
+            "name": "Solid shade"},
+        "VEG_GHAF": {
+            "alpha": 0.3, 
+            "fc": "#007F00", 
+            "zorder": 4, 
+            "lw": 1.0, 
+            "ec": "#007F00", 
+            "ls": "-", 
+            "name": "Ghaf (style) tree"
+        },
+    }
+
+    # Create custom legend for geometry
+    for k, v in material_properties.items():
+        try:
+            geo_data[k]["lgd"] = Patch(facecolor=v["fc"], edgecolor=None, label=v["name"])
+            geo_data[k]["fc"] = v["fc"]
+            geo_data[k]["name"] = v["name"]
+            geo_data[k]["alpha"] = v["alpha"]
+            geo_data[k]["ec"] = v["ec"]
+            geo_data[k]["lw"] = v["lw"]
+            geo_data[k]["ls"] = v["ls"]
+            geo_data[k]["zorder"] = v["zorder"]
+        except Exception as e:
+            print("{} not found in radiance geometry - skipping".format(k))
+
+    # Create patch collection for plotting
+    for k, v in geo_data.items():
+        patches = []
+        for verts in v["vertices"]:
+            if underlay:
+                patches.append(Polygon(verts, closed=True, fill=False, fc=None, ec="#D1D1D1", lw=1, ls="-", zorder=8, alpha=0.25))
+            else:
+                patches.append(Polygon(verts, closed=True, fill=True, fc=v["fc"], ec=v["ec"], lw=v["lw"], ls=v["ls"], zorder=v["zorder"], alpha=v["alpha"]))
+        geo_data[k]["patches"] = patches
+
+    return geo_data
 
 
 def utci_comfort_heatmap(hourly_utci_values, tone_color="k", invert_y=False, title=None, save_path=None, close=True):
