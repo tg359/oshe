@@ -461,6 +461,7 @@ class UTCI(object):
 
         # Load geometries into attribute
         self.load_geometries(rad_files)
+
         # Load legend and material properties into attributes
         self.generate_legend()
 

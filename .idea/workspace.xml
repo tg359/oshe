@@ -4,6 +4,7 @@
     <list default="true" id="e91a66c2-54c7-46d1-9e78-7e15d6f6bede" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Postprocess.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Postprocess.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oshe/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/plot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oshe/plot2.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/plot2.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

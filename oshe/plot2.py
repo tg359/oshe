@@ -5,10 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
-from matplotlib import dates
+from matplotlib import dates, ticker
 from matplotlib.patches import Patch, Polygon, Path, PathPatch
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from .helpers import chunk
+from .helpers import chunk, flatten
 
 # General housework
 pd.plotting.register_matplotlib_converters()
@@ -22,6 +23,9 @@ class UTCI(object):
         self.utci = pd.DataFrame(utci.T, index=self.index)  # array of point/hour values for year
         self.points = pd.DataFrame(points, columns=["x", "y", "z"])  # array of point locations (x, y, z)
         self.utci_difference = pd.DataFrame((utci_openfield - utci).T, index=self.index)  # openfield/points UTCI diff
+
+        self.xrange = self.points.x.min() - 5, self.points.x.max() + 5
+        self.yrange = self.points.y.min() - 5, self.points.y.max() + 5
 
         # Time filter masks
         self.mask_daily = ((self.index.hour >= 0) & (self.index.hour <= 24))
@@ -147,14 +151,145 @@ class UTCI(object):
             d[j][k] = ((temp_filtered >= threshold).sum() / temp_filtered.count())
         return pd.DataFrame.from_dict(d)
 
+    def plot_context(self, rad_files, pts=False, label_pts=None, highlight_pt=None, tone_color="k", save_path=None, close=True):
 
-def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING", "generic_wall"], underlay=True):
+        geo_data = load_radiance_geometries(rad_files, underlay=False)
+        x, y = self.points[["x", "y"]].values.T
+
+        # Instantiate figure and axis and format most of it
+        fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+        # ax.axis('off')
+        ax.set_aspect("equal")
+
+        patches = []
+        for k, v in geo_data.items():
+            patches.append(v["patches"])
+        p = PatchCollection(flatten(patches), match_original=True)
+        ax.add_collection(p)
+
+        if pts:
+            # Add sample point locations
+            ax.scatter(x, y, c=tone_color, s=1, marker="x", alpha=0.75, zorder=9)
+
+            if label_pts is not None:
+                for n, (xx, yy) in enumerate(list(zip(*[x, y]))):
+                    if n % label_pts == 0:
+                        ax.text(xx, yy, n, fontsize=2, ha="left", va="bottom", zorder=10, color=tone_color)
+
+        if highlight_pt is not None:
+            for p in highlight_pt:
+                # Highlight a sample point
+                ax.add_patch(plt.Circle((x[p], y[p]), radius=2, fc="#D50032", ec="w", lw=1, zorder=11, alpha=0.9))
+                ax.annotate(p, xy=(x[p], y[p]), fontsize="x-small", ha="center", va="center", zorder=12, color="w", weight="bold")
+
+        ax.set_xlim(self.xrange)
+        ax.set_ylim(self.yrange)
+
+        plt.tight_layout()
+
+        if save_path:
+            fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False)
+            print("Plot saved to {}".format(save_path))
+        if close:
+            plt.close()
+
+    def plot_contour(self, _type, mask, rad_files=None, clip=None, title=None, tone_color="k", save_path=None, close=True):
+
+        utci_comfortfreq_cmap = LinearSegmentedColormap.from_list("comfortfreq", ["#01073D", "#020B61", "#000E8F", "#11258C", "#003EBA", "#005BE3", "#006EE3", "#007CDB", "#009DD1", "#00ACBF", "#07B5AF", "#12B8A7", "#30BA9A", "#74C498", "#92C48D", "#AABF7E", "#BBC282", "#DBD2A7", "#F0E3AF", "#FFFFFF"][::-1],100)
+        utci_reduction_cmap = LinearSegmentedColormap.from_list("reduction", ["#70339e", "#887f8f", "#ffffff", "#0e7cab", "#00304a"], 100)
+
+        x, y = self.points[["x", "y"]].values.T
+
+        # Instantiate figure and axis and format most of it
+        fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+        ax.axis('off')
+        ax.set_aspect("equal")
+
+        # Define filters for year/day time periods
+
+        mask_count = mask.sum()
+
+        if _type is not None:
+            if _type == "comfort":
+                temp = self.utci[mask]
+                z = temp[((temp >= 8) & (temp <= 28))].count() / mask_count
+                tcf = ax.tricontourf(x, y, z, cmap=utci_comfortfreq_cmap, levels=np.linspace(0, 0.7, 100), zorder=1, extend="max", alpha=1)
+                # Add colorbar
+                cax = make_axes_locatable(ax).append_axes("right", size="5%", pad=0.25)
+                cb = plt.colorbar(tcf, cax=cax, ticks=ticker.MaxNLocator(nbins=11))
+                cb.ax.set_yticklabels(['{:.0%}'.format(float(x.get_text().replace("−", "-"))) for x in cb.ax.get_yticklabels()])
+                cb.ax.set_title('Frequency', color=tone_color, fontsize="medium", ha="left", va="bottom", x=0)
+                cb.outline.set_visible(False)
+                plt.setp(plt.getp(cb.ax.axes, 'yticklabels'), color=tone_color, fontsize="medium")
+                title = "UTCI comfort (9-28°C)" if title is None else title
+                ax.set_title(title, x=0, ha="left", va="bottom", color=tone_color)
+            elif _type == "reduction":
+                z = self.utci_difference[mask].quantile(0.5, axis=0)
+                tcf = ax.tricontourf(x, y, z, cmap=utci_reduction_cmap, levels=np.linspace(-10, 10, 100), zorder=1, extend="both", alpha=1)
+                tc = ax.tricontour(x, y, z, colors=tone_color, linewidths=0.5, linestyles=":", levels=[-4, -3, -2, -1, 0, 1, 2, 3, 4], zorder=10, alpha=0.5)
+                tcl = ax.clabel(tc, colors=tone_color, inline=True, fontsize="x-small", fmt="%0.0f")
+                # Add colorbar
+                cax = make_axes_locatable(ax).append_axes("right", size="5%", pad=0.25)
+                cb = plt.colorbar(tcf, cax=cax, ticks=ticker.MaxNLocator(nbins=10))
+                cb.ax.set_yticklabels(['{:.1f}'.format(float(x.get_text().replace("−", "-"))) for x in cb.ax.get_yticklabels()])
+                cb.ax.set_title('Reduction', color=tone_color, fontsize="medium", ha="left", va="bottom", x=0)
+                cb.outline.set_visible(False)
+                plt.setp(plt.getp(cb.ax.axes, 'yticklabels'), color=tone_color, fontsize="medium")
+                title = "Mean UTCI reduction" if title is None else title
+                ax.set_title(title, x=0, ha="left", va="bottom", color=tone_color)
+            elif _type == "improvement":
+                z = self.utci_difference[mask]
+                z = z[z > 4].count() / z.count()
+                tcf = ax.tricontourf(x, y, z, cmap=utci_comfortfreq_cmap, levels=np.linspace(0, 0.7, 100), zorder=1, extend="both", alpha=1)
+                # tc = ax.tricontour(x, y, z, colors=tone_color, linewidths=0.5, linestyles="--", levels=10, zorder=10, alpha=1)
+                # tcl = ax.clabel(tc, colors=tone_color, inline=True, fontsize="small", fmt="%0.0f")
+                # Add colorbar
+                cax = make_axes_locatable(ax).append_axes("right", size="5%", pad=0.25)
+                cb = plt.colorbar(tcf, cax=cax, ticks=ticker.MaxNLocator(nbins=10))
+                cb.ax.set_yticklabels(['{:.0%}'.format(float(x.get_text().replace("−", "-"))) for x in cb.ax.get_yticklabels()])
+                cb.ax.set_title('Improvement', color=tone_color, fontsize="medium", ha="left", va="bottom", x=0)
+                cb.outline.set_visible(False)
+                plt.setp(plt.getp(cb.ax.axes, 'yticklabels'), color=tone_color, fontsize="medium")
+                title = "UTCI improvement" if title is None else title
+                ax.set_title(title, x=0, ha="left", va="bottom", color=tone_color)
+
+        if rad_files is not None:
+            geo_data = load_radiance_geometries(rad_files, underlay=True)
+            # Add underlay
+            patches = []
+            for k, v in geo_data.items():
+                patches.append(v["patches"])
+            p = PatchCollection(flatten(patches), match_original=True)
+            ax.add_collection(p)
+
+        if clip is not None:
+            clip_path = Path(np.vstack([clip, clip[0]]), closed=True)
+            clip_patch = PathPatch(clip_path, facecolor=None, alpha=0)
+            ax.add_patch(clip_patch)
+            for c in tcf.collections:
+                c.set_clip_path(clip_patch)
+
+        ax.set_xlim(self.xrange)
+        ax.set_ylim(self.yrange)
+
+        plt.tight_layout()
+
+        if save_path:
+            fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False)
+            print("Plot saved to {}".format(save_path))
+        if close:
+            plt.close()
+
+
+
+def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=True):
     """ Load the radiance geometry into a dictionary, containing vertex groups and materials names as key
 
     Parameters
     ----------
     rad_files
     exclude
+    underlay
 
     Returns
     -------
@@ -349,7 +484,7 @@ def utci_comfort_heatmap(hourly_utci_values, tone_color="k", invert_y=False, tit
         plt.close()
 
 
-def utci_reduction_heatmap(hourly_utci_values, vrange=[-10, 10], title=None, tone_color="k", invert_y=False, save_path=None, close=False):
+def utci_reduction_heatmap(hourly_utci_values, vrange=[-10, 10], title=None, tone_color="k", invert_y=False, save_path=None, close=True):
 
     utci_reduction_cmap = LinearSegmentedColormap.from_list("reduction", ["#70339e", "#887f8f", "#ffffff", "#0e7cab", "#00304a"], 100)
 
@@ -408,7 +543,7 @@ def utci_reduction_heatmap(hourly_utci_values, vrange=[-10, 10], title=None, ton
         plt.close()
 
 
-def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.arange(1, 13, 1), names=["A", "B"], title=None, tone_color="k", save_path=None, close=False):
+def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.arange(1, 13, 1), names=["A", "B"], title=None, tone_color="k", save_path=None, close=True):
 
     day_idx = pd.date_range("2018-05-15 00:00:00", freq="60T", periods=24, closed="left")
     annual_idx = pd.date_range(start="2018-01-01 00:30:00", freq="60T", periods=8760, closed="left")
