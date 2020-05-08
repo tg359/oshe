@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 
+from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
@@ -628,3 +629,54 @@ def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.ar
     # if close:
     #     plt.close()
 
+def append_images(images, direction='horizontal', bg_color=(255,255,255), aligment='center'):
+    """ Appends images in horizontal/vertical direction.
+
+    Parameters
+    ----------
+    images : [PIL.Image]
+        List of PIL images
+    direction : str
+        Direction of concatenation: 'horizontal' or 'vertical'
+    bg_color : [R, G, B]
+        Background color (default: white)
+    aligment : str
+        Alignment mode if images need padding: 'left', 'right', 'top', 'bottom', or 'center'
+
+    Returns
+    -------
+    image : PIL.Image
+        Concatenated image as a new PIL image object
+    """
+
+    widths, heights = zip(*(i.size for i in images))
+
+    if direction == 'horizontal':
+        new_width = sum(widths)
+        new_height = max(heights)
+    else:
+        new_width = max(widths)
+        new_height = sum(heights)
+
+    new_im = Image.new('RGB', (new_width, new_height), color=bg_color)
+
+    offset = 0
+    for im in images:
+        if direction == 'horizontal':
+            y = 0
+            if aligment == 'center':
+                y = int((new_height - im.size[1]) / 2)
+            elif aligment == 'bottom':
+                y = new_height - im.size[1]
+            new_im.paste(im, (offset, y))
+            offset += im.size[0]
+        else:
+            x = 0
+            if aligment == 'center':
+                x = int((new_width - im.size[0]) / 2)
+            elif aligment == 'right':
+                x = new_width - im.size[0]
+            new_im.paste(im, (x, offset))
+            offset += im.size[1]
+
+    return new_im
