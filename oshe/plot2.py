@@ -629,7 +629,7 @@ def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.ar
     # if close:
     #     plt.close()
 
-def append_images(images, direction='horizontal', bg_color=(255,255,255), aligment='center'):
+def append_images(images, direction='horizontal', bg_color=(255, 255, 255), aligment='center'):
     """ Appends images in horizontal/vertical direction.
 
     Parameters
@@ -638,8 +638,8 @@ def append_images(images, direction='horizontal', bg_color=(255,255,255), aligme
         List of PIL images
     direction : str
         Direction of concatenation: 'horizontal' or 'vertical'
-    bg_color : [R, G, B]
-        Background color (default: white)
+    bg_color : [r, g, b]
+        Background color (0-255) (default: white)
     aligment : str
         Alignment mode if images need padding: 'left', 'right', 'top', 'bottom', or 'center'
 
