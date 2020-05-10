@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 
 from PIL import Image
+import os
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
@@ -56,7 +57,7 @@ class UTCI(object):
         self.mask_october_afternoon = self.mask_october & self.mask_shoulder_afternoon
         self.mask_october_morning = self.mask_october & self.mask_shoulder_morning
         self.mask_october_shoulder = self.mask_october & self.mask_shoulder_day
-        self.mask_shoulder_all = self.mask_shoulder_day & self.mask_may_october
+        self.mask_may_october_shoulder = self.mask_shoulder_day & self.mask_may_october
 
     def get_x(self):
         return self.points.T[0]
@@ -159,7 +160,7 @@ class UTCI(object):
 
         # Instantiate figure and axis and format most of it
         fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-        # ax.axis('off')
+        ax.axis('off')
         ax.set_aspect("equal")
 
         patches = []
@@ -281,7 +282,103 @@ class UTCI(object):
         if close:
             plt.close()
 
+    def generate_plots(self, rad_files, focus_pts, boundary, plot_directory):
+        # Open field comfort heatmap
+        sp = os.path.join(plot_directory, "openfield_comfortheatmap.png")
+        utci_comfort_heatmap(self.utci_openfield.values, title="Universal Thermal Climate Index - Open field", save_path=sp, close=True)
 
+        # Context only
+        sp = os.path.join(plot_directory, "context.png")
+        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=None, save_path=sp, close=True)
+
+        # Context with point labels
+        sp = os.path.join(plot_directory, "context_ptlabel.png")
+        self.plot_context(rad_files, pts=True, label_pts=True, highlight_pt=None, save_path=sp, close=True)
+
+        # Context with focus points
+        sp = os.path.join(plot_directory, "context_focuspts.png")
+        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=focus_pts, save_path=sp, close=True)
+
+        # Comfort, improvement and reduction plots
+        masks = [
+            self.mask_shoulder_morning,
+            self.mask_shoulder_afternoon,
+            self.mask_shoulder_day,
+
+            self.mask_may & self.mask_shoulder_morning,
+            self.mask_may & self.mask_shoulder_afternoon,
+            self.mask_may & self.mask_shoulder_day,
+
+            self.mask_october & self.mask_shoulder_morning,
+            self.mask_october & self.mask_shoulder_afternoon,
+            self.mask_october & self.mask_shoulder_day,
+        ]
+        titles = [
+            "Annual - Morning Shoulder",
+            "Annual - Afternoon Shoulder",
+            "Annual - Morning & Afternoon Shoulder",
+            "May - Morning Shoulder",
+            "May - Afternoon Shoulder",
+            "May - Morning & Afternoon Shoulder",
+            "October - Morning Shoulder",
+            "October - Afternoon Shoulder",
+            "October - Morning & Afternoon Shoulder",
+        ]
+
+        for k in ["improvement", "comfort", "reduction"]:
+            for i, j in list(zip(*[masks, titles])):
+                vv = j.replace(" & ", "").replace(" - ", "_").replace(" ", "").lower()
+                sp = os.path.join(plot_directory, "{}_{}.png".format(k, vv))
+                self.plot_contour(_type=k, mask=i, rad_files=rad_files, clip=boundary, title=j, save_path=sp, close=True)
+
+            # Create combined plot
+            ims = [
+                Image.open(os.path.join(plot_directory, "{}_annual_morningshoulder.png".format(k))),
+                Image.open(os.path.join(plot_directory, "{}_annual_afternoonshoulder.png".format(k)))
+            ]
+            a = append_images(ims, direction='horizontal', bg_color=(255, 255, 255), aligment='center')
+            ims = [
+                Image.open(os.path.join(plot_directory, "{}_may_morningshoulder.png".format(k))),
+                Image.open(os.path.join(plot_directory, "{}_may_afternoonshoulder.png".format(k)))
+            ]
+            b = append_images(ims, direction='horizontal', bg_color=(255, 255, 255), aligment='center')
+            ims = [
+                Image.open(os.path.join(plot_directory, "{}_october_morningshoulder.png".format(k))),
+                Image.open(os.path.join(plot_directory, "{}_october_afternoonshoulder.png".format(k)))
+            ]
+            c = append_images(ims, direction='horizontal', bg_color=(255, 255, 255), aligment='center')
+
+            # Combine verticals
+            im = append_images([a, b, c], direction='vertical', bg_color=(255, 255, 255), aligment='center')
+            im.save(os.path.join(plot_directory, "_{}_collection.png".format(k)))
+
+        # # Reduction and comfort heatmaps, profiles
+        for fp in focus_pts:
+
+            sp = os.path.join(plot_directory, "pt{0:04d}_reductionheatmap.png".format(fp))
+            utci_reduction_heatmap(self.utci_difference[fp].values, save_path=sp, close=True)
+            b = Image.open(sp)
+
+            sp = os.path.join(plot_directory, "pt{0:04d}_comfortheatmap.png".format(fp))
+            utci_comfort_heatmap(self.utci[fp].values, save_path=sp, close=True)
+            a = Image.open(sp)
+
+            # Profiles
+            months = [5, 10]
+            titles = ["May", "October"]
+            im_temps = []
+            for i, j in list(zip(*[months, titles])):
+                sp = os.path.join(plot_directory, "pt{0:04d}_profile_{1:}.png".format(fp, j.lower()))
+                im_temps.append(sp)
+                utci_day_comparison(self.utci[fp].values, self.utci_openfield,
+                                             title="Average diurnal UTCI - {}".format(j), months=[i],
+                                             names=["Open field", "Point {}".format(fp)], save_path=sp, close=True)
+
+            c = append_images([Image.open(im_temps[0]), Image.open(im_temps[1])], direction='horizontal',
+                                       bg_color=(255, 255, 255), aligment='center')
+
+            im = append_images([a, b, c], direction='vertical', bg_color=(255, 255, 255), aligment='center')
+            im.save(os.path.join(plot_directory, "pt{0:04d}_collected.png".format(fp)))
 
 def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=True):
     """ Load the radiance geometry into a dictionary, containing vertex groups and materials names as key
@@ -561,7 +658,7 @@ def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.ar
     formatter = dates.DateFormatter('%H:%M')
 
     # Instantiate plot
-    fig, ax = plt.subplots(1, 1, figsize=(8, 4))
+    fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
 
     # Plot input values
     ax.plot(a, label=names[0], c="#00A4E2", lw=2, zorder=2)
@@ -573,14 +670,12 @@ def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.ar
 
     # Add vertical difference lines at interesting indices
     sorted_diff = (a - b).sort_values(ascending=True)
-    for n, l in enumerate([23]):
+    for n, l in enumerate([0, 23]):
         i = sorted_diff.index[l]
         j = -sorted_diff.iloc[l]
         k = np.max([a[i], b[i]], axis=0)
-        pref = "Max" if n == 0 else "Median" if n == 1 else "aargh what are you doing here!?!"
-
         ax.vlines(i, ymin=k, ymax=ax.get_ylim()[1] * 0.93, colors="#555555", lw=2, ls="-", zorder=1, alpha=0.2)
-        ax.text(i, ax.get_ylim()[1], "{1:}\n{0:+0.1f}°".format(j, pref), ha="center", va="top", color=tone_color, size="small")
+        ax.text(i, ax.get_ylim()[1], "{0:+0.1f}°".format(j), ha="center", va="top", color=tone_color, size="small")
 
     # Format plot area
     ax.xaxis.set_major_locator(locator)
@@ -614,20 +709,6 @@ def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.ar
     if close:
         plt.close()
 
-    # return a, b
-
-
-    #
-
-    #
-    # # Tidy
-    # plt.tight_layout()
-    #
-    # if save_path:
-    #     fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False)
-    #     print("Plot saved to {}".format(save_path))
-    # if close:
-    #     plt.close()
 
 def append_images(images, direction='horizontal', bg_color=(255, 255, 255), aligment='center'):
     """ Appends images in horizontal/vertical direction.
