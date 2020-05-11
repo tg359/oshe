@@ -16,6 +16,7 @@ from .helpers import chunk, flatten
 # General housework
 pd.plotting.register_matplotlib_converters()
 
+# TODO - Add method in GH of attributing colors to layers for use in context plots
 
 class UTCI(object):
     def __init__(self, utci_openfield, utci, points):
@@ -282,22 +283,22 @@ class UTCI(object):
         if close:
             plt.close()
 
-    def generate_plots(self, rad_files, focus_pts, boundary, plot_directory):
+    def generate_plots(self, rad_files, focus_pts, boundary, plot_directory, tone_color="k"):
         # Open field comfort heatmap
         sp = os.path.join(plot_directory, "openfield_comfortheatmap.png")
-        utci_comfort_heatmap(self.utci_openfield.values, title="Universal Thermal Climate Index - Open field", save_path=sp, close=True)
+        utci_comfort_heatmap(self.utci_openfield.values, title="Universal Thermal Climate Index - Open field", save_path=sp, close=True, tone_color=tone_color)
 
         # Context only
         sp = os.path.join(plot_directory, "context.png")
-        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=None, save_path=sp, close=True)
+        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=None, save_path=sp, close=True, tone_color=tone_color)
 
         # Context with point labels
         sp = os.path.join(plot_directory, "context_ptlabel.png")
-        self.plot_context(rad_files, pts=True, label_pts=True, highlight_pt=None, save_path=sp, close=True)
+        self.plot_context(rad_files, pts=True, label_pts=True, highlight_pt=None, save_path=sp, close=True, tone_color=tone_color)
 
         # Context with focus points
         sp = os.path.join(plot_directory, "context_focuspts.png")
-        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=focus_pts, save_path=sp, close=True)
+        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=focus_pts, save_path=sp, close=True, tone_color=tone_color)
 
         # Comfort, improvement and reduction plots
         masks = [
@@ -329,7 +330,7 @@ class UTCI(object):
             for i, j in list(zip(*[masks, titles])):
                 vv = j.replace(" & ", "").replace(" - ", "_").replace(" ", "").lower()
                 sp = os.path.join(plot_directory, "{}_{}.png".format(k, vv))
-                self.plot_contour(_type=k, mask=i, rad_files=rad_files, clip=boundary, title=j, save_path=sp, close=True)
+                self.plot_contour(_type=k, mask=i, rad_files=rad_files, clip=boundary, title=j, save_path=sp, close=True, tone_color=tone_color)
 
             # Create combined plot
             ims = [
@@ -356,11 +357,11 @@ class UTCI(object):
         for fp in focus_pts:
 
             sp = os.path.join(plot_directory, "pt{0:04d}_reductionheatmap.png".format(fp))
-            utci_reduction_heatmap(self.utci_difference[fp].values, save_path=sp, close=True)
+            utci_reduction_heatmap(self.utci_difference[fp].values, save_path=sp, close=True, tone_color=tone_color)
             b = Image.open(sp)
 
             sp = os.path.join(plot_directory, "pt{0:04d}_comfortheatmap.png".format(fp))
-            utci_comfort_heatmap(self.utci[fp].values, save_path=sp, close=True)
+            utci_comfort_heatmap(self.utci[fp].values, save_path=sp, close=True, tone_color=tone_color)
             a = Image.open(sp)
 
             # Profiles
@@ -372,13 +373,14 @@ class UTCI(object):
                 im_temps.append(sp)
                 utci_day_comparison(self.utci[fp].values, self.utci_openfield,
                                              title="Average diurnal UTCI - {}".format(j), months=[i],
-                                             names=["Open field", "Point {}".format(fp)], save_path=sp, close=True)
+                                             names=["Open field", "Point {}".format(fp)], save_path=sp, close=True, tone_color=tone_color)
 
             c = append_images([Image.open(im_temps[0]), Image.open(im_temps[1])], direction='horizontal',
                                        bg_color=(255, 255, 255), aligment='center')
 
             im = append_images([a, b, c], direction='vertical', bg_color=(255, 255, 255), aligment='center')
             im.save(os.path.join(plot_directory, "pt{0:04d}_collected.png".format(fp)))
+
 
 def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=True):
     """ Load the radiance geometry into a dictionary, containing vertex groups and materials names as key
@@ -501,7 +503,8 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             geo_data[k]["ls"] = v["ls"]
             geo_data[k]["zorder"] = v["zorder"]
         except Exception as e:
-            print("{} not found in radiance geometry - skipping".format(k))
+            # print("{} not found in radiance geometry - skipping".format(k))
+            pass
 
     # Create patch collection for plotting
     for k, v in geo_data.items():
@@ -674,7 +677,7 @@ def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.ar
         i = sorted_diff.index[l]
         j = -sorted_diff.iloc[l]
         k = np.max([a[i], b[i]], axis=0)
-        ax.vlines(i, ymin=k, ymax=ax.get_ylim()[1] * 0.93, colors="#555555", lw=2, ls="-", zorder=1, alpha=0.2)
+        ax.vlines(i, ymin=k, ymax=ax.get_ylim()[1] * 0.96, colors="#555555", lw=2, ls="-", zorder=1, alpha=0.2)
         ax.text(i, ax.get_ylim()[1], "{0:+0.1f}°".format(j), ha="center", va="top", color=tone_color, size="small")
 
     # Format plot area
