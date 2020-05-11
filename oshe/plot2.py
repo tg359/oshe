@@ -283,6 +283,71 @@ class UTCI(object):
         if close:
             plt.close()
 
+    def plot_comfortable_hours(self, lower=9, upper=28, months=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], percentile=0.95, title=None, tone_color="k", save_path=None, close=True):
+        a = get_aggregate_day(self.utci, lower=lower, upper=upper, months=months, percentile=percentile)
+        b = get_aggregate_day(self.utci_openfield, lower=lower, upper=upper, months=months, percentile=percentile)
+
+        # Plotting
+        locator = dates.HourLocator(byhour=np.arange(0, 25, 3))
+        minor_locator = dates.HourLocator(byhour=np.arange(0, 25, 1))
+        formatter = dates.DateFormatter('%H:%M')
+
+        # Instantiate plot
+        fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
+
+        # Plot input values
+        ax.plot(a, label="{0:0.0f}%-ile sampled points".format(percentile * 100), c="#00A4E2", lw=2, zorder=2)
+        ax.plot(b, label="Open field", c="#FF3E3E", lw=2, zorder=2)
+
+        # Fill between series
+        ax.fill_between(a.index, a, b, where=a > b, facecolor="#AFC1A2", alpha=0.25, interpolate=True)
+        ax.fill_between(a.index, a, b, where=a < b, facecolor="#E6484D", alpha=0.25, interpolate=True)
+
+        # Set plot limits
+        ax.set_ylim(0, 1)
+
+        # Add vertical difference lines at interesting indices
+        sorted_diff = (a - b).sort_values(ascending=True)
+        for n, l in enumerate([0, 23]):
+            i = sorted_diff.index[l]
+            j = -sorted_diff.iloc[l]
+            k = np.max([a[i], b[i]], axis=0)
+            ax.vlines(i, ymin=k, ymax=ax.get_ylim()[1] * 0.96, colors="#555555", lw=2, ls="-", zorder=1, alpha=0.2)
+            ax.text(i, ax.get_ylim()[1], "{0:+0.1%}".format(-j), ha="center", va="top", color=tone_color, size="small")
+
+        # Format plot area
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+        ax.xaxis.set_minor_locator(minor_locator)
+        ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax=1))
+        [ax.spines[spine].set_visible(False) for spine in ['top', 'right']]
+        [ax.spines[j].set_color(tone_color) for j in ['bottom', 'left']]
+        ax.set_xlim([a.index.min(), a.index.max()])
+        ax.grid(b=True, which='minor', axis='both', c=tone_color, ls=':', lw=0.5, alpha=0.1)
+        ax.grid(b=True, which='major', axis='both', c=tone_color, ls=':', lw=1, alpha=0.2)
+        ax.tick_params(which="both", length=1, color=tone_color)
+        plt.setp(ax.get_xticklabels(), color=tone_color)
+        plt.setp(ax.get_yticklabels(), color=tone_color)
+        ax.set_xlabel("Time of day", color=tone_color)
+        ax.set_ylabel("% hours within {0:}-{1:} UTCI (°C)".format(lower, upper), color=tone_color)
+
+        # Legend
+        lgd = ax.legend(frameon=False, bbox_to_anchor=(1, 1), loc="lower right", ncol=2)
+        [plt.setp(text, color=tone_color) for text in lgd.get_texts()]
+
+        # Set title
+        title = "Comfortable hours" if title is None else title
+        ax.set_title(title, color=tone_color, ha="left", va="bottom", x=0)
+
+        # Tidy
+        plt.tight_layout()
+
+        if save_path:
+            fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False)
+            print("Plot saved to {}".format(save_path))
+        if close:
+            plt.close()
+
     def generate_plots(self, rad_files, focus_pts, boundary, plot_directory, tone_color="k"):
         # Open field comfort heatmap
         sp = os.path.join(plot_directory, "openfield_comfortheatmap.png")
@@ -380,6 +445,21 @@ class UTCI(object):
 
             im = append_images([a, b, c], direction='vertical', bg_color=(255, 255, 255), aligment='center')
             im.save(os.path.join(plot_directory, "pt{0:04d}_collected.png".format(fp)))
+
+        # Comfortable hours summary
+        months = [
+            [5],
+            [10],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        ]
+        titles = [
+            "May",
+            "October",
+            "Annual"
+        ]
+        for i, j in list(zip(*[months, titles])):
+            sp = os.path.join(plot_directory, "comfortable_hours_{0:}.png".format(j.lower()))
+            self.plot_comfortable_hours(lower=9, upper=28, months=i, percentile=0.95, title="Comfortable hours - {}".format(j), tone_color="k", save_path=sp, close=True)
 
 
 def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=True):
@@ -764,3 +844,32 @@ def append_images(images, direction='horizontal', bg_color=(255, 255, 255), alig
             offset += im.size[1]
 
     return new_im
+
+
+def get_aggregate_day(utci_values, lower=9, upper=28, months=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], percentile=0.95):
+    # Create month of year mask and number of potential values
+    mask = utci_values.index.month.isin(months)
+    count = pd.Series(mask).groupby(utci_values.index.hour).sum()
+
+    # Filter the input to only use the masked data
+    temp = utci_values[mask]
+
+    # Get the elements where the comfort limits are fulfilled
+    temp = temp[(temp >= lower) & (temp <= upper)]
+
+    # Get the number of hours where the "sample" point meets the comfort limit in the sample period
+    temp = temp.groupby(temp.index.hour).count()
+
+    # Get the nth percentile within the sample points
+    try:
+        temp = temp.quantile(percentile, axis=1)
+    except Exception as e:
+        pass
+
+    # Get the proportion of comfortable hours in filtered data
+    temp = temp / count
+    temp.fillna(0, inplace=True)
+
+    temp.index = pd.date_range("2018-05-15 00:00:00", freq="60T", periods=24, closed="left")
+
+    return temp
