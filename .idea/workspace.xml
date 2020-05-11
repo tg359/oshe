@@ -2,20 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e91a66c2-54c7-46d1-9e78-7e15d6f6bede" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/tgerrish.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/a/2/a28fcc56cf14246d2d3682791ed7f3c3dc4202c1" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/a/2/a28fcc56cf14246d2d3682791ed7f3c3dc4202c1" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/e/5/e5c62009d321ddc09f517e26d18aa1898d19ea2d" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/e/5/e5c62009d321ddc09f517e26d18aa1898d19ea2d" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Postprocess.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Postprocess.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/ground.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/helpers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/plot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/plot2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/radiation.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/surface_temperature.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

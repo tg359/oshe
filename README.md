@@ -20,18 +20,18 @@ The outputs returned from this whole process, are annual-hourly point-wise MRT a
         <tbody>
             <tr>
                 <td>
-                    <img src="https://github.com/tg359/oshe/blob/ghadan21/example/plots/reduction_may_morningshoulder.png" alt="May morning UTCI comfort improvement"> 
+                    <img src="https://github.com/tg359/oshe/blob/master/example/plots/reduction_may_morningshoulder.png" alt="May morning UTCI comfort improvement"> 
                 </td>
                 <td>
-                    <img src="https://github.com/tg359/oshe/blob/ghadan21/example/plots/comfortable_hours_annual.png" alt="Annual comfortable hours - comparison between open field and sampled points">
+                    <img src="https://github.com/tg359/oshe/blob/master/example/plots/comfortable_hours_annual.png" alt="Annual comfortable hours - comparison between open field and sampled points">
                 </td>
                 <td>
-                    <img src="https://github.com/tg359/oshe/blob/ghadan21/example/plots/context_focuspts.png" alt="Context geometry and focus points"> 
+                    <img src="https://github.com/tg359/oshe/blob/master/example/plots/context_focuspts.png" alt="Context geometry and focus points"> 
                 </td>
             </tr>
             <tr>
                 <td colspan="3">
-                    <img src="https://github.com/tg359/oshe/blob/ghadan21/example/plots/pt0001_collected.png" alt="Focus point open field comparison"> 
+                    <img src="https://github.com/tg359/oshe/blob/master/example/plots/pt0001_collected.png" alt="Focus point open field comparison"> 
                 </td>
             </tr>
         </tbody>
