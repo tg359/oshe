@@ -9,4 +9,4 @@ The full process is as follows:
 4. Open field MRT is calculated from a simple case of unshaded exposed ground of given type (default is "CONCRETE").
 5. The MRT for each point is calculated using the view-factors and surface temperature to surfaces, view factor to sky and sky temperature, and radiation from sun and reflected from context in the Radiance results. This method is split across n-processes to help speed up the processing of large numbers of sample points.
 6. The UTCI for each point is also calculated, again across multiple processes to speed up processing.
-7 A UTCI object is created containing the open-field results and the point-results, which can then be used to plot the time-filtered performance of the sample area. 
+7. A UTCI object is created containing the open-field results and the point-results, which can then be used to plot the time-filtered performance of the sample area. 
