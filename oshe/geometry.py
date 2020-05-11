@@ -1,19 +1,22 @@
 import io
-
 import typing
+
 from eppy.modeleditor import IDF, IDDAlreadySetError
 from honeybee.hbsurface import HBSurface
 from ladybug_geometry.geometry2d.mesh import Mesh2D
 from ladybug_geometry.geometry2d.polygon import Polygon2D
-from ladybug_geometry.geometry3d.pointvector import Point3D
 from ladybug_geometry.geometry3d.face import Face3D
+from ladybug_geometry.geometry3d.pointvector import Point3D
 
-from . import material as mat
 from oshe.helpers import random_id
+from . import material as mat
+
 
 class Face3D(Face3D):
     def to_hb(self, rad_properties, name, surface_type):
-        return HBSurface(sorted_points=self.vertices, name=name, rad_properties=rad_properties, surface_type=surface_type)
+        return HBSurface(sorted_points=self.vertices, name=name, rad_properties=rad_properties,
+                         surface_type=surface_type)
+
 
 class Ground(object):
     def __init__(self, material: mat.MaterialBase, xy: float = 10, depth: float = 1.5, subsurface_size: float = 2):
@@ -26,9 +29,12 @@ class Ground(object):
         self.generate_faces()
 
     def generate_faces(self):
-        polygon = Polygon2D.from_dict({"type": "Polygon2D", "vertices": [(-self.xy / 2, -self.xy / 2), (self.xy / 2, -self.xy / 2), (self.xy / 2, self.xy / 2), (-self.xy / 2, self.xy / 2)]})
+        polygon = Polygon2D.from_dict({"type": "Polygon2D",
+                                       "vertices": [(-self.xy / 2, -self.xy / 2), (self.xy / 2, -self.xy / 2),
+                                                    (self.xy / 2, self.xy / 2), (-self.xy / 2, self.xy / 2)]})
         mesh = Mesh2D.from_polygon_grid(polygon, x_dim=self.subsurface_size, y_dim=self.subsurface_size)
-        self.faces_top = [Face3D([Point3D(mesh.vertices[vertex].x, mesh.vertices[vertex].y, 0) for vertex in face]) for face in mesh.faces]
+        self.faces_top = [Face3D([Point3D(mesh.vertices[vertex].x, mesh.vertices[vertex].y, 0) for vertex in face]) for
+                          face in mesh.faces]
 
         pt0 = Point3D(-self.xy / 2, -self.xy / 2, 0)
         pt1 = Point3D(self.xy / 2, -self.xy / 2, 0)
@@ -46,7 +52,8 @@ class Ground(object):
         self.face_west = Face3D([pt7, pt4, pt0, pt3])
 
     def to_hb(self):
-        return [i.to_hb(self.surface_material.to_hb(), name="ground_{0:04.0f}".format(n), surface_type=2) for n, i in enumerate(self.faces_top)]
+        return [i.to_hb(self.surface_material.to_hb(), name="ground_{0:04.0f}".format(n), surface_type=2) for n, i in
+                enumerate(self.faces_top)]
 
     def to_eppy(self, idd_file: str):
         try:
@@ -112,8 +119,11 @@ class Ground(object):
 
         return eppy_objects
 
+
 class Shade(object):
-    def __init__(self, vertices: typing.List[typing.List[float]] = [[-500, -500, 3], [500, -500, 3], [500, 500, 3], [-500, 500, 3]], material: mat.MaterialBase = mat.material_dict["CONCRETE"]):
+    def __init__(self, vertices: typing.List[typing.List[float]] = [[-500, -500, 3], [500, -500, 3], [500, 500, 3],
+                                                                    [-500, 500, 3]],
+                 material: mat.MaterialBase = mat.material_dict["CONCRETE"]):
         self.vertices = [Point3D(i[0], i[1], i[2]) for i in vertices]
         self.material = material
         self._create_face()

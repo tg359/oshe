@@ -13,7 +13,9 @@ from .geometry import Ground, Shade
 from .helpers import flatten
 
 
-def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade = None, output_directory: str = pathlib.Path(tempfile.gettempdir()), case_name: str = "openfield", run: bool = False) -> typing.List[typing.List[float]]:
+def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade = None,
+                   output_directory: str = pathlib.Path(tempfile.gettempdir()), case_name: str = "openfield",
+                   run: bool = False) -> typing.List[typing.List[float]]:
     """ Calculate the surface temperature of a bit of ground using EnergyPlus
 
     Parameters
@@ -84,18 +86,24 @@ def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade =
     try:
         # Load monthly ground temperatures from weather-file and assign to shallow objects
         ground_temperature_shallow = idf.newidfobject("SITE:GROUNDTEMPERATURE:SHALLOW")
-        for i, j in list(zip(*[pd.date_range("2018", "2019", freq="1M").strftime("%B"), EPW(epw_file).monthly_ground_temperature[0.5].values])):
+        for i, j in list(zip(*[pd.date_range("2018", "2019", freq="1M").strftime("%B"),
+                               EPW(epw_file).monthly_ground_temperature[0.5].values])):
             setattr(ground_temperature_shallow, "{}_Surface_Ground_Temperature".format(i), j)
     except Exception as e:
-        warnings.warn("Something went wrong - shallow ground temperatures (0.5m depth) from weatherfile not included in simulation\n{0:}".format(e))
+        warnings.warn(
+            "Something went wrong - shallow ground temperatures (0.5m depth) from weatherfile not included in simulation\n{0:}".format(
+                e))
 
     try:
         # Load monthly ground temperatures from weather-file and assign to deep objects
         ground_temperature_shallow = idf.newidfobject("SITE:GROUNDTEMPERATURE:DEEP")
-        for i, j in list(zip(*[pd.date_range("2018", "2019", freq="1M").strftime("%B"), EPW(epw_file).monthly_ground_temperature[4].values])):
+        for i, j in list(zip(*[pd.date_range("2018", "2019", freq="1M").strftime("%B"),
+                               EPW(epw_file).monthly_ground_temperature[4].values])):
             setattr(ground_temperature_shallow, "{}_Deep_Ground_Temperature".format(i), j)
     except Exception as e:
-        warnings.warn("Something went wrong - deep ground temperatures (4m depth) from weatherfile not included in simulation\n{0:}".format(e))
+        warnings.warn(
+            "Something went wrong - deep ground temperatures (4m depth) from weatherfile not included in simulation\n{0:}".format(
+                e))
 
     # Load objects into IDF from inputs
     for eppy_object in flatten(ground.to_eppy(idd_file)):
@@ -142,6 +150,7 @@ def load_energyplus_results(file_path: str):
     print("EnergyPlus results loaded")
     return data
 
+
 def view_factor_calculation():
-    # TODO - Add view factor calculation method from sensor point locarion to sky, ground and shade objects
+    # TODO - Add view factor calculation method from sensor point location to sky, ground and shade objects
     return None

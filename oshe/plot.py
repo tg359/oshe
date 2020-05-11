@@ -1,13 +1,12 @@
-
-import pandas as pd
-import numpy as np
-
-from PIL import Image
 import os
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from PIL import Image
+from matplotlib import dates, ticker
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
-from matplotlib import dates, ticker
 from matplotlib.patches import Patch, Polygon, Path, PathPatch
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -16,6 +15,7 @@ from .helpers import chunk, flatten
 # General housework
 pd.plotting.register_matplotlib_converters()
 
+
 # TODO - Add method in GH of attributing colors to layers for use in context plots
 
 
@@ -23,6 +23,7 @@ class UTCI(object):
     """
     An object containing annual hourly UTCI values for an open field, sample point locations, and the corresponding XYZ coordinates for those sample points
     """
+
     def __init__(self, utci_openfield, utci, points):
 
         self.index = pd.date_range(start="2018-01-01 00:30:00", freq="60T", periods=8760, closed="left")
@@ -54,7 +55,8 @@ class UTCI(object):
 
         self.mask_shoulder_morning = ((self.index.hour >= 7) & (self.index.hour <= 10))
         self.mask_shoulder_afternoon = ((self.index.hour >= 16) & (self.index.hour <= 20))
-        self.mask_shoulder_day = (((self.index.hour >= 7) & (self.index.hour <= 10)) | ((self.index.hour >= 16) & (self.index.hour <= 20)))
+        self.mask_shoulder_day = (((self.index.hour >= 7) & (self.index.hour <= 10)) | (
+                    (self.index.hour >= 16) & (self.index.hour <= 20)))
 
         self.mask_may_afternoon = self.mask_may & self.mask_shoulder_afternoon
         self.mask_may_morning = self.mask_may & self.mask_shoulder_morning
@@ -152,7 +154,8 @@ class UTCI(object):
             d[j][k] = ((temp_filtered >= threshold).sum() / temp_filtered.count())
         return pd.DataFrame.from_dict(d)
 
-    def plot_context(self, rad_files, pts=False, label_pts=None, highlight_pt=None, tone_color="k", save_path=None, close=True):
+    def plot_context(self, rad_files, pts=False, label_pts=None, highlight_pt=None, tone_color="k", save_path=None,
+                     close=True):
 
         geo_data = load_radiance_geometries(rad_files, underlay=False)
         x, y = self.points[["x", "y"]].values.T
@@ -181,7 +184,8 @@ class UTCI(object):
             for p in highlight_pt:
                 # Highlight a sample point
                 ax.add_patch(plt.Circle((x[p], y[p]), radius=2, fc="#D50032", ec="w", lw=1, zorder=11, alpha=0.9))
-                ax.annotate(p, xy=(x[p], y[p]), fontsize="x-small", ha="center", va="center", zorder=12, color="w", weight="bold")
+                ax.annotate(p, xy=(x[p], y[p]), fontsize="x-small", ha="center", va="center", zorder=12, color="w",
+                            weight="bold")
 
         ax.set_xlim(self.xrange)
         ax.set_ylim(self.yrange)
@@ -194,10 +198,19 @@ class UTCI(object):
         if close:
             plt.close()
 
-    def plot_contour(self, _type, mask, rad_files=None, clip=None, title=None, tone_color="k", save_path=None, close=True):
+    def plot_contour(self, _type, mask, rad_files=None, clip=None, title=None, tone_color="k", save_path=None,
+                     close=True):
 
-        utci_comfortfreq_cmap = LinearSegmentedColormap.from_list("comfortfreq", ["#01073D", "#020B61", "#000E8F", "#11258C", "#003EBA", "#005BE3", "#006EE3", "#007CDB", "#009DD1", "#00ACBF", "#07B5AF", "#12B8A7", "#30BA9A", "#74C498", "#92C48D", "#AABF7E", "#BBC282", "#DBD2A7", "#F0E3AF", "#FFFFFF"][::-1],100)
-        utci_reduction_cmap = LinearSegmentedColormap.from_list("reduction", ["#70339e", "#887f8f", "#ffffff", "#0e7cab", "#00304a"], 100)
+        utci_comfortfreq_cmap = LinearSegmentedColormap.from_list("comfortfreq",
+                                                                  ["#01073D", "#020B61", "#000E8F", "#11258C",
+                                                                   "#003EBA", "#005BE3", "#006EE3", "#007CDB",
+                                                                   "#009DD1", "#00ACBF", "#07B5AF", "#12B8A7",
+                                                                   "#30BA9A", "#74C498", "#92C48D", "#AABF7E",
+                                                                   "#BBC282", "#DBD2A7", "#F0E3AF", "#FFFFFF"][::-1],
+                                                                  100)
+        utci_reduction_cmap = LinearSegmentedColormap.from_list("reduction",
+                                                                ["#70339e", "#887f8f", "#ffffff", "#0e7cab", "#00304a"],
+                                                                100)
 
         x, y = self.points[["x", "y"]].values.T
 
@@ -214,11 +227,13 @@ class UTCI(object):
             if _type == "comfort":
                 temp = self.utci[mask]
                 z = temp[((temp >= 8) & (temp <= 28))].count() / mask_count
-                tcf = ax.tricontourf(x, y, z, cmap=utci_comfortfreq_cmap, levels=np.linspace(0, 0.7, 100), zorder=1, extend="max", alpha=1)
+                tcf = ax.tricontourf(x, y, z, cmap=utci_comfortfreq_cmap, levels=np.linspace(0, 0.7, 100), zorder=1,
+                                     extend="max", alpha=1)
                 # Add colorbar
                 cax = make_axes_locatable(ax).append_axes("right", size="5%", pad=0.25)
                 cb = plt.colorbar(tcf, cax=cax, ticks=ticker.MaxNLocator(nbins=11))
-                cb.ax.set_yticklabels(['{:.0%}'.format(float(x.get_text().replace("−", "-"))) for x in cb.ax.get_yticklabels()])
+                cb.ax.set_yticklabels(
+                    ['{:.0%}'.format(float(x.get_text().replace("−", "-"))) for x in cb.ax.get_yticklabels()])
                 cb.ax.set_title('Frequency', color=tone_color, fontsize="medium", ha="left", va="bottom", x=0)
                 cb.outline.set_visible(False)
                 plt.setp(plt.getp(cb.ax.axes, 'yticklabels'), color=tone_color, fontsize="medium")
@@ -226,13 +241,16 @@ class UTCI(object):
                 ax.set_title(title, x=0, ha="left", va="bottom", color=tone_color)
             elif _type == "reduction":
                 z = self.utci_difference[mask].quantile(0.5, axis=0)
-                tcf = ax.tricontourf(x, y, z, cmap=utci_reduction_cmap, levels=np.linspace(-10, 10, 100), zorder=1, extend="both", alpha=1)
-                tc = ax.tricontour(x, y, z, colors=tone_color, linewidths=0.5, linestyles=":", levels=[-4, -3, -2, -1, 0, 1, 2, 3, 4], zorder=10, alpha=0.5)
+                tcf = ax.tricontourf(x, y, z, cmap=utci_reduction_cmap, levels=np.linspace(-10, 10, 100), zorder=1,
+                                     extend="both", alpha=1)
+                tc = ax.tricontour(x, y, z, colors=tone_color, linewidths=0.5, linestyles=":",
+                                   levels=[-4, -3, -2, -1, 0, 1, 2, 3, 4], zorder=10, alpha=0.5)
                 tcl = ax.clabel(tc, colors=tone_color, inline=True, fontsize="x-small", fmt="%0.0f")
                 # Add colorbar
                 cax = make_axes_locatable(ax).append_axes("right", size="5%", pad=0.25)
                 cb = plt.colorbar(tcf, cax=cax, ticks=ticker.MaxNLocator(nbins=10))
-                cb.ax.set_yticklabels(['{:.1f}'.format(float(x.get_text().replace("−", "-"))) for x in cb.ax.get_yticklabels()])
+                cb.ax.set_yticklabels(
+                    ['{:.1f}'.format(float(x.get_text().replace("−", "-"))) for x in cb.ax.get_yticklabels()])
                 cb.ax.set_title('Reduction', color=tone_color, fontsize="medium", ha="left", va="bottom", x=0)
                 cb.outline.set_visible(False)
                 plt.setp(plt.getp(cb.ax.axes, 'yticklabels'), color=tone_color, fontsize="medium")
@@ -241,13 +259,15 @@ class UTCI(object):
             elif _type == "improvement":
                 z = self.utci_difference[mask]
                 z = z[z > 4].count() / z.count()
-                tcf = ax.tricontourf(x, y, z, cmap=utci_comfortfreq_cmap, levels=np.linspace(0, 0.7, 100), zorder=1, extend="both", alpha=1)
+                tcf = ax.tricontourf(x, y, z, cmap=utci_comfortfreq_cmap, levels=np.linspace(0, 0.7, 100), zorder=1,
+                                     extend="both", alpha=1)
                 # tc = ax.tricontour(x, y, z, colors=tone_color, linewidths=0.5, linestyles="--", levels=10, zorder=10, alpha=1)
                 # tcl = ax.clabel(tc, colors=tone_color, inline=True, fontsize="small", fmt="%0.0f")
                 # Add colorbar
                 cax = make_axes_locatable(ax).append_axes("right", size="5%", pad=0.25)
                 cb = plt.colorbar(tcf, cax=cax, ticks=ticker.MaxNLocator(nbins=10))
-                cb.ax.set_yticklabels(['{:.0%}'.format(float(x.get_text().replace("−", "-"))) for x in cb.ax.get_yticklabels()])
+                cb.ax.set_yticklabels(
+                    ['{:.0%}'.format(float(x.get_text().replace("−", "-"))) for x in cb.ax.get_yticklabels()])
                 cb.ax.set_title('Improvement', color=tone_color, fontsize="medium", ha="left", va="bottom", x=0)
                 cb.outline.set_visible(False)
                 plt.setp(plt.getp(cb.ax.axes, 'yticklabels'), color=tone_color, fontsize="medium")
@@ -281,7 +301,8 @@ class UTCI(object):
         if close:
             plt.close()
 
-    def plot_comfortable_hours(self, lower=9, upper=28, months=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], percentile=0.95, title=None, tone_color="k", save_path=None, close=True):
+    def plot_comfortable_hours(self, lower=9, upper=28, months=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], percentile=0.95,
+                               title=None, tone_color="k", save_path=None, close=True):
         a = get_aggregate_day(self.utci, lower=lower, upper=upper, months=months, percentile=percentile)
         b = get_aggregate_day(self.utci_openfield, lower=lower, upper=upper, months=months, percentile=percentile)
 
@@ -350,7 +371,8 @@ class UTCI(object):
 
         # Open field comfort heatmap
         sp = os.path.join(plot_directory, "openfield_comfortheatmap.png")
-        utci_comfort_heatmap(self.utci_openfield.values, title="Universal Thermal Climate Index - Open field", save_path=sp, close=True, tone_color=tone_color)
+        utci_comfort_heatmap(self.utci_openfield.values, title="Universal Thermal Climate Index - Open field",
+                             save_path=sp, close=True, tone_color=tone_color)
 
         # Comfortable hours summary
         months = [
@@ -371,15 +393,18 @@ class UTCI(object):
 
         # Context only
         sp = os.path.join(plot_directory, "context.png")
-        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=None, save_path=sp, close=True, tone_color=tone_color)
+        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=None, save_path=sp, close=True,
+                          tone_color=tone_color)
 
         # Context with point labels
         sp = os.path.join(plot_directory, "context_ptlabel.png")
-        self.plot_context(rad_files, pts=True, label_pts=True, highlight_pt=None, save_path=sp, close=True, tone_color=tone_color)
+        self.plot_context(rad_files, pts=True, label_pts=True, highlight_pt=None, save_path=sp, close=True,
+                          tone_color=tone_color)
 
         # Context with focus points
         sp = os.path.join(plot_directory, "context_focuspts.png")
-        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=focus_pts, save_path=sp, close=True, tone_color=tone_color)
+        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=focus_pts, save_path=sp, close=True,
+                          tone_color=tone_color)
 
         # Comfort, improvement and reduction plots
         masks = [
@@ -410,7 +435,8 @@ class UTCI(object):
             for i, j in list(zip(*[masks, titles])):
                 vv = j.replace(" & ", "").replace(" - ", "_").replace(" ", "").lower()
                 sp = os.path.join(plot_directory, "{}_{}.png".format(k, vv))
-                self.plot_contour(_type=k, mask=i, rad_files=rad_files, clip=boundary, title=j, save_path=sp, close=True, tone_color=tone_color)
+                self.plot_contour(_type=k, mask=i, rad_files=rad_files, clip=boundary, title=j, save_path=sp,
+                                  close=True, tone_color=tone_color)
 
             # Create combined plot
             ims = [
@@ -452,11 +478,12 @@ class UTCI(object):
                 sp = os.path.join(plot_directory, "pt{0:04d}_profile_{1:}.png".format(fp, j.lower()))
                 im_temps.append(sp)
                 utci_day_comparison(self.utci[fp].values, self.utci_openfield,
-                                             title="Average diurnal UTCI - {}".format(j), months=[i],
-                                             names=["Open field", "Point {}".format(fp)], save_path=sp, close=True, tone_color=tone_color)
+                                    title="Average diurnal UTCI - {}".format(j), months=[i],
+                                    names=["Open field", "Point {}".format(fp)], save_path=sp, close=True,
+                                    tone_color=tone_color)
 
             c = append_images([Image.open(im_temps[0]), Image.open(im_temps[1])], direction='horizontal',
-                                       bg_color=(255, 255, 255), aligment='center')
+                              bg_color=(255, 255, 255), aligment='center')
 
             im = append_images([a, b, c], direction='vertical', bg_color=(255, 255, 255), aligment='center')
             im.save(os.path.join(plot_directory, "pt{0:04d}_collected.png".format(fp)))
@@ -505,36 +532,36 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
     # Default material properties - modify these to format the context geometry
     material_properties = {
         "BDG_CONTEXT": {
-            "alpha": 1.0, 
-            "fc": "#BEBEBE", 
-            "zorder": 2, 
-            "lw": 1.0, 
-            "ec": "#BEBEBE", 
-            "ls": "-", 
+            "alpha": 1.0,
+            "fc": "#BEBEBE",
+            "zorder": 2,
+            "lw": 1.0,
+            "ec": "#BEBEBE",
+            "ls": "-",
             "name": "Building"},
         "GND_CONCRETE": {
-            "alpha": 1.0, 
-            "fc": "#BEBEBE", 
-            "zorder": 1, 
-            "lw": 0.25, 
-            "ec": "#BEBEBE", 
-            "ls": ":", 
+            "alpha": 1.0,
+            "fc": "#BEBEBE",
+            "zorder": 1,
+            "lw": 0.25,
+            "ec": "#BEBEBE",
+            "ls": ":",
             "name": "Concrete"},
         "GND_GRASS": {
-            "alpha": 1.0, 
-            "fc": "#005800", 
-            "zorder": 1, 
-            "lw": 0.25, 
-            "ec": "#005800", 
-            "ls": ":", 
+            "alpha": 1.0,
+            "fc": "#005800",
+            "zorder": 1,
+            "lw": 0.25,
+            "ec": "#005800",
+            "ls": ":",
             "name": "Grass"},
         "GND_STONE": {
-            "alpha": 1.0, 
-            "fc": "#FFDEAD", 
-            "zorder": 4, 
-            "lw": 0.75, 
-            "ec": "#FFDEAD", 
-            "ls": ":", 
+            "alpha": 1.0,
+            "fc": "#FFDEAD",
+            "zorder": 4,
+            "lw": 0.75,
+            "ec": "#FFDEAD",
+            "ls": ":",
             "name": "Stone"},
         "GND_SAND": {
             "alpha": 1.0,
@@ -545,28 +572,28 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ls": ":",
             "name": "Sand"},
         "GND_WATER": {
-            "alpha": 1.0, 
-            "fc": "#3FBFBF", 
-            "zorder": 1, 
-            "lw": 0.25, 
-            "ec": "#3FBFBF", 
-            "ls": ":", 
+            "alpha": 1.0,
+            "fc": "#3FBFBF",
+            "zorder": 1,
+            "lw": 0.25,
+            "ec": "#3FBFBF",
+            "ls": ":",
             "name": "Water"},
         "SHD_SOLID": {
-            "alpha": 0.8, 
-            "fc": "#696969", 
-            "zorder": 3, 
-            "lw": 1.0, 
-            "ec": "#696969", 
-            "ls": "-", 
+            "alpha": 0.8,
+            "fc": "#696969",
+            "zorder": 3,
+            "lw": 1.0,
+            "ec": "#696969",
+            "ls": "-",
             "name": "Solid shade"},
         "VEG_GHAF": {
-            "alpha": 0.3, 
-            "fc": "#007F00", 
-            "zorder": 4, 
-            "lw": 1.0, 
-            "ec": "#007F00", 
-            "ls": "-", 
+            "alpha": 0.3,
+            "fc": "#007F00",
+            "zorder": 4,
+            "lw": 1.0,
+            "ec": "#007F00",
+            "ls": "-",
             "name": "Ghaf (style) tree"
         },
     }
@@ -591,9 +618,11 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
         patches = []
         for verts in v["vertices"]:
             if underlay:
-                patches.append(Polygon(verts, closed=True, fill=False, fc=None, ec="#D1D1D1", lw=1, ls="-", zorder=8, alpha=0.25))
+                patches.append(
+                    Polygon(verts, closed=True, fill=False, fc=None, ec="#D1D1D1", lw=1, ls="-", zorder=8, alpha=0.25))
             else:
-                patches.append(Polygon(verts, closed=True, fill=True, fc=v["fc"], ec=v["ec"], lw=v["lw"], ls=v["ls"], zorder=v["zorder"], alpha=v["alpha"]))
+                patches.append(Polygon(verts, closed=True, fill=True, fc=v["fc"], ec=v["ec"], lw=v["lw"], ls=v["ls"],
+                                       zorder=v["zorder"], alpha=v["alpha"]))
         geo_data[k]["patches"] = patches
 
     return geo_data
@@ -665,9 +694,11 @@ def utci_comfort_heatmap(hourly_utci_values, tone_color="k", invert_y=False, tit
         plt.close()
 
 
-def utci_reduction_heatmap(hourly_utci_values, vrange=[-10, 10], title=None, tone_color="k", invert_y=False, save_path=None, close=True):
-
-    utci_reduction_cmap = LinearSegmentedColormap.from_list("reduction", ["#70339e", "#887f8f", "#ffffff", "#0e7cab", "#00304a"], 100)
+def utci_reduction_heatmap(hourly_utci_values, vrange=[-10, 10], title=None, tone_color="k", invert_y=False,
+                           save_path=None, close=True):
+    utci_reduction_cmap = LinearSegmentedColormap.from_list("reduction",
+                                                            ["#70339e", "#887f8f", "#ffffff", "#0e7cab", "#00304a"],
+                                                            100)
 
     # Create pivotable dataframe
     idx = pd.date_range(start="2018-01-01 00:00:00", freq="60T", periods=8760, closed="left")
@@ -703,7 +734,8 @@ def utci_reduction_heatmap(hourly_utci_values, vrange=[-10, 10], title=None, ton
     [tick.set_color(tone_color) for tick in ax.get_xticklines()]
 
     # Colorbar
-    cb = fig.colorbar(heatmap, cmap=utci_reduction_cmap, orientation='horizontal', drawedges=False, fraction=0.05, aspect=100, pad=0.125)  #
+    cb = fig.colorbar(heatmap, cmap=utci_reduction_cmap, orientation='horizontal', drawedges=False, fraction=0.05,
+                      aspect=100, pad=0.125)  #
     plt.setp(plt.getp(cb.ax.axes, 'xticklabels'), color=tone_color, fontsize="small")
     [tick.set_color(tone_color) for tick in cb.ax.axes.get_xticklines()]
     cb.ax.set_xlabel("UTCI improvement [°C] (higher is better)", fontsize="medium", color=tone_color)
@@ -724,16 +756,18 @@ def utci_reduction_heatmap(hourly_utci_values, vrange=[-10, 10], title=None, ton
         plt.close()
 
 
-def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.arange(1, 13, 1), names=["A", "B"], title=None, tone_color="k", save_path=None, close=True):
-
+def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.arange(1, 13, 1), names=["A", "B"],
+                        title=None, tone_color="k", save_path=None, close=True):
     day_idx = pd.date_range("2018-05-15 00:00:00", freq="60T", periods=24, closed="left")
     annual_idx = pd.date_range(start="2018-01-01 00:30:00", freq="60T", periods=8760, closed="left")
     annual_mask = annual_idx.month.isin(months)
     masked_idx = annual_idx[annual_mask]
 
     # Create series to plot
-    a = pd.Series(index=day_idx, data=pd.Series(hourly_utci_values_a[annual_mask]).groupby([masked_idx.hour]).quantile(0.5).values)
-    b = pd.Series(index=day_idx, data=pd.Series(hourly_utci_values_b[annual_mask]).groupby([masked_idx.hour]).quantile(0.5).values)
+    a = pd.Series(index=day_idx,
+                  data=pd.Series(hourly_utci_values_a[annual_mask]).groupby([masked_idx.hour]).quantile(0.5).values)
+    b = pd.Series(index=day_idx,
+                  data=pd.Series(hourly_utci_values_b[annual_mask]).groupby([masked_idx.hour]).quantile(0.5).values)
 
     # Plotting
     locator = dates.HourLocator(byhour=np.arange(0, 25, 3))

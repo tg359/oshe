@@ -5,7 +5,6 @@ The solarcal formulas of this module are taken from the following publications:
 SOLARCAL_SPLINES: A dictionary with two keys: 'standing' and 'seated'. Each value for these keys is a 2D matrix of projection factors for human geometry.  Each row refers to an degree of azimuth and each column refers to a degree of altitude.
 """
 
-
 import numpy as np
 
 
@@ -31,7 +30,12 @@ def sky_temperature(horizontal_infrared_radiation: float, source_emissivity: flo
     return ((horizontal_infrared_radiation / (source_emissivity * sigma)) ** 0.25) - 273.15
 
 
-def outdoor_sky_heat_exchange(visible_surfaces_temperature: float, horizontal_infrared_radiation: float, diffuse_horizontal_solar_radiation: float, direct_normal_solar_radiation: float, solar_altitude: float, sky_exposure: float = 1, fraction_body_exposed: float = 1, floor_reflectance: float = 0.25, posture: str = 'standing', sharp: int = 135, body_absorptivity: float = 0.7, body_emissivity: float = 0.95, radiance: bool = False) -> float:
+def outdoor_sky_heat_exchange(visible_surfaces_temperature: float, horizontal_infrared_radiation: float,
+                              diffuse_horizontal_solar_radiation: float, direct_normal_solar_radiation: float,
+                              solar_altitude: float, sky_exposure: float = 1, fraction_body_exposed: float = 1,
+                              floor_reflectance: float = 0.25, posture: str = 'standing', sharp: int = 135,
+                              body_absorptivity: float = 0.7, body_emissivity: float = 0.95,
+                              radiance: bool = False) -> float:
     """ Perform a full outdoor sky radiant heat exchange.
     Parameters
     ----------
@@ -72,15 +76,19 @@ def outdoor_sky_heat_exchange(visible_surfaces_temperature: float, horizontal_in
 
     # Calculate the influence of shortwave irradiance
     if solar_altitude >= 0:
-        s_flux = body_solar_flux_from_parts(diffuse_horizontal_solar_radiation, direct_normal_solar_radiation, solar_altitude, sharp, 1 if radiance else sky_exposure, fraction_body_exposed, floor_reflectance, posture)
-        short_effective_radiant_field = effective_radiant_field_from_body_solar_flux(s_flux, body_absorptivity, body_emissivity)
+        s_flux = body_solar_flux_from_parts(diffuse_horizontal_solar_radiation, direct_normal_solar_radiation,
+                                            solar_altitude, sharp, 1 if radiance else sky_exposure,
+                                            fraction_body_exposed, floor_reflectance, posture)
+        short_effective_radiant_field = effective_radiant_field_from_body_solar_flux(s_flux, body_absorptivity,
+                                                                                     body_emissivity)
         short_mrt_delta = mrt_delta_from_effective_radiant_field(short_effective_radiant_field, fractional_efficiency)
     else:
         short_effective_radiant_field = 0
         short_mrt_delta = 0
 
     # calculate the influence of long-wave heat exchange with the sky
-    long_mrt_delta = longwave_mrt_delta_from_horiz_ir(horizontal_infrared_radiation, visible_surfaces_temperature, sky_exposure, body_emissivity)
+    long_mrt_delta = longwave_mrt_delta_from_horiz_ir(horizontal_infrared_radiation, visible_surfaces_temperature,
+                                                      sky_exposure, body_emissivity)
     long_effective_radiant_field = effective_radiant_field_from_mrt_delta(long_mrt_delta, fractional_efficiency)
 
     # calculate final MRT as a result of both long-wave and shortwave heat exchange
@@ -88,11 +96,13 @@ def outdoor_sky_heat_exchange(visible_surfaces_temperature: float, horizontal_in
 
     return sky_adjusted_mrt
 
+
 # Vectorise the outdoor_sky_heat_exchange method to speed up the calculation
 oshe = np.vectorize(outdoor_sky_heat_exchange)
 
 
-def mrt_delta_from_effective_radiant_field(effective_radiant_field: float, fraction_body_exposed: float = 0.725, radiant_heat_transfer_coefficient: float = 6.012) -> float:
+def mrt_delta_from_effective_radiant_field(effective_radiant_field: float, fraction_body_exposed: float = 0.725,
+                                           radiant_heat_transfer_coefficient: float = 6.012) -> float:
     """ Calculate the mean radiant temperature (MRT) delta as a result of an ERF.
 
     Parameters
@@ -112,7 +122,8 @@ def mrt_delta_from_effective_radiant_field(effective_radiant_field: float, fract
     return effective_radiant_field / (fraction_body_exposed * radiant_heat_transfer_coefficient)
 
 
-def effective_radiant_field_from_mrt_delta(mrt_delta: float, fraction_body_exposed: float = 0.725, radiant_heat_transfer_coefficient: float = 6.012)-> float:
+def effective_radiant_field_from_mrt_delta(mrt_delta: float, fraction_body_exposed: float = 0.725,
+                                           radiant_heat_transfer_coefficient: float = 6.012) -> float:
     """ Calculate the effective radiant field (ERF) from a MRT delta.
 
     Parameters
@@ -133,7 +144,8 @@ def effective_radiant_field_from_mrt_delta(mrt_delta: float, fraction_body_expos
     return mrt_delta * fraction_body_exposed * radiant_heat_transfer_coefficient
 
 
-def longwave_mrt_delta_from_horiz_ir(horiz_ir: float, srfs_temp: float, sky_exposure: float = 1, body_emissivity: float = 0.95) -> float:
+def longwave_mrt_delta_from_horiz_ir(horiz_ir: float, srfs_temp: float, sky_exposure: float = 1,
+                                     body_emissivity: float = 0.95) -> float:
     """ Calculate the MRT delta as a result of longwave radiant exchange with the sky.
 
     Note that this value is typically negative since the earth (and humans) tend to radiate heat out to space in the longwave portion of the spectrum.
@@ -181,7 +193,8 @@ def longwave_mrt_delta_from_sky_temp(sky_temp: float, srfs_temp: float, sky_expo
     return 0.5 * sky_exposure * (sky_temp - srfs_temp)
 
 
-def effective_radiant_field_from_body_solar_flux(solar_flux: float, body_absorptivity: float = 0.7, body_emissivity: float = 0.95) -> float:
+def effective_radiant_field_from_body_solar_flux(solar_flux: float, body_absorptivity: float = 0.7,
+                                                 body_emissivity: float = 0.95) -> float:
     """ Calculate effective radiant field (ERF) from incident solar flux on body in W/m2.
 
     Parameters
@@ -199,7 +212,9 @@ def effective_radiant_field_from_body_solar_flux(solar_flux: float, body_absorpt
     return solar_flux * (body_absorptivity / body_emissivity)
 
 
-def body_solar_flux_from_parts(diffuse_horizontal_solar_radiation: float, direct_normal_solar_radiation: float, altitude: float, sharp: float = 135, sky_exposure: float = 1, fract_exposed: float = 1, floor_reflectance: float = 0.25, posture: str = 'standing') -> float:
+def body_solar_flux_from_parts(diffuse_horizontal_solar_radiation: float, direct_normal_solar_radiation: float,
+                               altitude: float, sharp: float = 135, sky_exposure: float = 1, fract_exposed: float = 1,
+                               floor_reflectance: float = 0.25, posture: str = 'standing') -> float:
     """ Estimate the total solar flux on human geometry from solar components.
 
     Parameters
@@ -236,7 +251,9 @@ def body_solar_flux_from_parts(diffuse_horizontal_solar_radiation: float, direct
     return dir_solar + diff_solar + ref_solar
 
 
-def body_solar_flux_from_horiz_parts(diffuse_horizontal_solar_radiation: float, dir_horiz_solar: float, altitude: float, sharp: float = 135, fract_exposed: float = 1, floor_reflectance: float = 0.25, posture: str = 'standing') -> float:
+def body_solar_flux_from_horiz_parts(diffuse_horizontal_solar_radiation: float, dir_horiz_solar: float, altitude: float,
+                                     sharp: float = 135, fract_exposed: float = 1, floor_reflectance: float = 0.25,
+                                     posture: str = 'standing') -> float:
     """ Estimate total solar flux on human geometry from horizontal solar components.
 
     This method is useful for cases when one wants to take the hourly results of a spatial radiation study with Radiance and use them to build a map of ERF or MRT delta on a person.
@@ -272,7 +289,8 @@ def body_solar_flux_from_horiz_parts(diffuse_horizontal_solar_radiation: float, 
     return dir_solar + diff_solar + ref_solar
 
 
-def body_diff_from_diff_horiz(diffuse_horizontal_solar_radiation: float, sky_exposure: float = 1, fraction_body_exposed: float = 0.725) -> float:
+def body_diff_from_diff_horiz(diffuse_horizontal_solar_radiation: float, sky_exposure: float = 1,
+                              fraction_body_exposed: float = 0.725) -> float:
     """ Estimate the diffuse solar flux on human geometry from diffuse horizontal solar.
 
     Parameters
@@ -291,7 +309,8 @@ def body_diff_from_diff_horiz(diffuse_horizontal_solar_radiation: float, sky_exp
     return 0.5 * sky_exposure * fraction_body_exposed * diffuse_horizontal_solar_radiation
 
 
-def body_ref_from_glob_horiz(glob_horiz_solar: float, floor_reflectance: float = 0.25, sky_exposure: float = 1, fraction_body_exposed: float = 0.725) -> float:
+def body_ref_from_glob_horiz(glob_horiz_solar: float, floor_reflectance: float = 0.25, sky_exposure: float = 1,
+                             fraction_body_exposed: float = 0.725) -> float:
     """ Estimate floor-reflected solar flux on human geometry from global horizontal solar.
 
     Parameters
@@ -312,7 +331,8 @@ def body_ref_from_glob_horiz(glob_horiz_solar: float, floor_reflectance: float =
     return 0.5 * sky_exposure * fraction_body_exposed * glob_horiz_solar * floor_reflectance
 
 
-def body_dir_from_dir_horiz(dir_horiz_solar: float, altitude: float, sharp: float = 135, posture: str = 'standing', fract_exposed: float = 1) -> float:
+def body_dir_from_dir_horiz(dir_horiz_solar: float, altitude: float, sharp: float = 135, posture: str = 'standing',
+                            fract_exposed: float = 1) -> float:
     """ Estimate the direct solar flux on human geometry from direct horizontal solar.
 
     Parameters
@@ -337,7 +357,8 @@ def body_dir_from_dir_horiz(dir_horiz_solar: float, altitude: float, sharp: floa
     return proj_fac * fract_exposed * direct_normal_solar_radiation
 
 
-def body_dir_from_dir_normal(direct_normal_solar_radiation: float, altitude: float, sharp: float = 135, posture: str = 'standing', fract_exposed: float = 1) -> float:
+def body_dir_from_dir_normal(direct_normal_solar_radiation: float, altitude: float, sharp: float = 135,
+                             posture: str = 'standing', fract_exposed: float = 1) -> float:
     """ Estimate the direct solar flux on human geometry from direct horizontal solar.
     Parameters
     ----------
@@ -438,7 +459,7 @@ def get_projection_factor_simple(altitude: float, sharp: int = 135, posture: str
     def _find_span(arr, x):
         # For ordered array arr, find the left index of the closest interval x falls in.
         for i in range(len(arr) - 1):
-            if x <= arr[i+1] and x >= arr[i]:
+            if x <= arr[i + 1] and x >= arr[i]:
                 return i
         raise ValueError('altitude/azimuth {} is outside of acceptable ranges'.format(x))
 
@@ -453,9 +474,9 @@ def get_projection_factor_simple(altitude: float, sharp: int = 135, posture: str
     ap22 = ap_table[az_i + 1][alt_i + 1]
 
     az1 = az_range[az_i]
-    az2 = az_range[az_i+1]
+    az2 = az_range[az_i + 1]
     alt1 = alt_range[alt_i]
-    alt2 = alt_range[alt_i+1]
+    alt2 = alt_range[alt_i + 1]
 
     # Bi-linear interpolation
     ap = ap11 * (az2 - sharp) * (alt2 - altitude)

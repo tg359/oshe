@@ -1,15 +1,18 @@
 import io
-from .helpers import random_id
 from typing import List
 
-from eppy.modeleditor import IDF, IDDAlreadySetError
 from eppy.bunch_subclass import EpBunch
+from eppy.modeleditor import IDF, IDDAlreadySetError
 from honeybee.radiance.material.plastic import Plastic
 from honeybee.radiance.material.trans import Trans
 from honeybee.radiance.properties import RadianceProperties
 
+from .helpers import random_id
+
+
 class MaterialBase(object):
     """ Base class for Material object """
+
     def __init__(self, name: str = None):
         self.name = "{0:}_{1:}".format("material" if name is None else name, random_id())
 
@@ -62,7 +65,15 @@ class Softscape(MaterialBase):
         The field allows for two models to be selected: Simple or Advanced. Simple is the original Ecoroof model - based on a constant diffusion of moisture through the soil. This model starts with the soil in two layers. Every time the soil properties update is called, it will look at the two soils moisture layers and asses which layer has more moisture in it. It then takes moisture from the higher moisture layer and redistributes it to the lower moisture layer at a constant rate. Advanced is the later Ecoroof model. If you use it, you will need to increase your number of timesteps in hour for the simulation with a recommended value of 20. This moisture transport model is based on a project which looked at the way moisture transports through soil. It uses a finite difference method to divide the soil into layers (nodes). It redistributes the soil moisture according the model described in:
     """
 
-    def __init__(self, roughness: str = "MediumRough", thickness: float = 0.1, conductivity: float = 0.35, density: float = 1100, specific_heat: float = 1200, thermal_absorptance: float = 0.95, solar_absorptance: float = 0.7, visible_absorptance: float = 0.75, plant_height: float = 0.2, leaf_area_index: float = 1, leaf_reflectivity: float = 0.22, leaf_emissivity: float = 0.95, minimum_stomatal_resistance: float = 180, soil_layer_name: str = "Soil", saturation_volumetric_moisture_content_of_the_soil_layer: float = 0.3, residual_volumetric_moisture_content_of_the_soil_layer: float = 0.01, initial_volumetric_moisture_content_of_the_soil_layer: float = 0.1, moisture_diffusion_calculation_method: str = "Advanced"):
+    def __init__(self, roughness: str = "MediumRough", thickness: float = 0.1, conductivity: float = 0.35,
+                 density: float = 1100, specific_heat: float = 1200, thermal_absorptance: float = 0.95,
+                 solar_absorptance: float = 0.7, visible_absorptance: float = 0.75, plant_height: float = 0.2,
+                 leaf_area_index: float = 1, leaf_reflectivity: float = 0.22, leaf_emissivity: float = 0.95,
+                 minimum_stomatal_resistance: float = 180, soil_layer_name: str = "Soil",
+                 saturation_volumetric_moisture_content_of_the_soil_layer: float = 0.3,
+                 residual_volumetric_moisture_content_of_the_soil_layer: float = 0.01,
+                 initial_volumetric_moisture_content_of_the_soil_layer: float = 0.1,
+                 moisture_diffusion_calculation_method: str = "Advanced"):
         super().__init__()
         self.material_type = self.__class__.__name__
         self.roughness = roughness
@@ -93,7 +104,9 @@ class Softscape(MaterialBase):
 
     def to_hb(self) -> RadianceProperties:
         """ Convert Material into Honeybee Radiance material property object """
-        return RadianceProperties(material=Plastic(self.name, r_reflectance=self.reflectivity, g_reflectance=self.reflectivity, b_reflectance=self.reflectivity))
+        return RadianceProperties(
+            material=Plastic(self.name, r_reflectance=self.reflectivity, g_reflectance=self.reflectivity,
+                             b_reflectance=self.reflectivity))
 
     def to_eppy(self, idd_file: str) -> List[EpBunch]:
         """ Convert Material into Eppy material and construction objects """
@@ -161,7 +174,9 @@ class Hardscape(MaterialBase):
         Proportion of light absorbed by material (value between 0 and 1)
     """
 
-    def __init__(self, roughness: str = "MediumRough", thickness: float = 0.1, conductivity: float = 0.35, density: float = 1100, specific_heat: float = 1200, thermal_absorptance: float = 0.95, solar_absorptance: float = 0.7, visible_absorptance: float = 0.75):
+    def __init__(self, roughness: str = "MediumRough", thickness: float = 0.1, conductivity: float = 0.35,
+                 density: float = 1100, specific_heat: float = 1200, thermal_absorptance: float = 0.95,
+                 solar_absorptance: float = 0.7, visible_absorptance: float = 0.75):
         super().__init__()
         self.material_type = self.__class__.__name__
         self.roughness = roughness
@@ -179,7 +194,9 @@ class Hardscape(MaterialBase):
 
     def to_hb(self) -> RadianceProperties:
         """ Convert Material into Honeybee Radiance material property object """
-        return RadianceProperties(material=Plastic(self.name, r_reflectance=self.reflectivity, g_reflectance=self.reflectivity, b_reflectance=self.reflectivity))
+        return RadianceProperties(
+            material=Plastic(self.name, r_reflectance=self.reflectivity, g_reflectance=self.reflectivity,
+                             b_reflectance=self.reflectivity))
 
     def to_eppy(self, idd_file: str) -> List[EpBunch]:
         """ Convert Material into Eppy material and construction objects """
@@ -235,7 +252,10 @@ class Water(MaterialBase):
     emissivity : float
         Proportion of light absorbed by material (value between 0 and 1)
     """
-    def __init__(self, thickness: float = 0.5, solar_transmittance: float = 0.837, solar_reflectance: float = 0.075, visible_transmittance: float = 0.898, visible_reflectance: float = 0.081, conductivity: float = 0.9, emissivity: float = 0.96):
+
+    def __init__(self, thickness: float = 0.5, solar_transmittance: float = 0.837, solar_reflectance: float = 0.075,
+                 visible_transmittance: float = 0.898, visible_reflectance: float = 0.081, conductivity: float = 0.9,
+                 emissivity: float = 0.96):
         super().__init__()
         self.material_type = self.__class__.__name__
         self.thickness = thickness
@@ -255,7 +275,10 @@ class Water(MaterialBase):
         return (self.solar_transmittance + self.visible_transmittance) / 2
 
     def to_hb(self) -> RadianceProperties:
-        return RadianceProperties(material=Trans(name=self.name, r_reflectance=self.reflectance, g_reflectance=self.reflectance, b_reflectance=self.reflectance, transmitted_diff=self.transmittance, transmitted_spec=self.transmittance))
+        return RadianceProperties(
+            material=Trans(name=self.name, r_reflectance=self.reflectance, g_reflectance=self.reflectance,
+                           b_reflectance=self.reflectance, transmitted_diff=self.transmittance,
+                           transmitted_spec=self.transmittance))
 
     def to_eppy(self, idd_file: str) -> List[EpBunch]:
         """ Convert Material into Eppy material and construction objects """
@@ -298,17 +321,40 @@ class Water(MaterialBase):
 
 # DEFAULTS
 material_dict = {
-    "FABRIC": Hardscape(roughness="Smooth", thickness=0.001, conductivity=45.28, density=7824, specific_heat=500, thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7),
-    "WATER": Water(thickness=0.5, solar_transmittance=0.837, solar_reflectance=0.075, visible_transmittance=0.898, visible_reflectance=0.081, conductivity=0.9, emissivity=0.96),
-    "GRASS": Softscape(roughness="Rough", thickness=0.2, conductivity=1.0, density=1250, specific_heat=1252, thermal_absorptance=0.92, solar_absorptance=0.75, visible_absorptance=0.75, plant_height=0.05, leaf_area_index=1.71, leaf_reflectivity=0.19, leaf_emissivity= 0.95, minimum_stomatal_resistance=180, soil_layer_name="Soil", saturation_volumetric_moisture_content_of_the_soil_layer=0.3, residual_volumetric_moisture_content_of_the_soil_layer=0.01, initial_volumetric_moisture_content_of_the_soil_layer=0.1),
-    "SHRUBS": Softscape(roughness="Rough", thickness=0.2, conductivity=0.5, density=1600, specific_heat=1026, thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7, plant_height=0.25, leaf_area_index=2.08, leaf_reflectivity=0.21, leaf_emissivity= 0.95, minimum_stomatal_resistance=180, soil_layer_name="Soil", saturation_volumetric_moisture_content_of_the_soil_layer=0.3, residual_volumetric_moisture_content_of_the_soil_layer=0.01, initial_volumetric_moisture_content_of_the_soil_layer=0.1),
-    "METAL": Hardscape(roughness="Smooth", thickness=0.001, conductivity=45.28, density=7824, specific_heat=500, thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7),
-    "SAND": Hardscape(roughness="Rough", thickness=0.2, conductivity=0.33, density=1555, specific_heat=800, thermal_absorptance=0.85, solar_absorptance=0.65, visible_absorptance=0.65),
-    "SANDSTONE": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=6.2, density=2560, specific_heat=790, thermal_absorptance=0.6, solar_absorptance=0.55, visible_absorptance=0.55),
-    "LIMESTONE": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=3.2, density=2560, specific_heat=790, thermal_absorptance=0.96, solar_absorptance=0.55, visible_absorptance=0.55),
-    "HARDWOOD": Hardscape(roughness="MediumSmooth", thickness=0.1, conductivity=0.167, density=680, specific_heat=1630, thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7),
-    "SOFTWOOD": Hardscape(roughness="MediumSmooth", thickness=0.1, conductivity=0.129, density=496, specific_heat=1630, thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7),
-    "CONCRETE": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=1.73, density=2243, specific_heat=837, thermal_absorptance=0.9, solar_absorptance=0.65, visible_absorptance=0.65),
-    "ASPHALT": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=0.75, density=2360, specific_heat=920, thermal_absorptance=0.93, solar_absorptance=0.87, visible_absorptance=0.87),
-    "INTERFACE": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=5.0, density=1000, specific_heat=1000, thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7)
+    "FABRIC": Hardscape(roughness="Smooth", thickness=0.001, conductivity=45.28, density=7824, specific_heat=500,
+                        thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7),
+    "WATER": Water(thickness=0.5, solar_transmittance=0.837, solar_reflectance=0.075, visible_transmittance=0.898,
+                   visible_reflectance=0.081, conductivity=0.9, emissivity=0.96),
+    "GRASS": Softscape(roughness="Rough", thickness=0.2, conductivity=1.0, density=1250, specific_heat=1252,
+                       thermal_absorptance=0.92, solar_absorptance=0.75, visible_absorptance=0.75, plant_height=0.05,
+                       leaf_area_index=1.71, leaf_reflectivity=0.19, leaf_emissivity=0.95,
+                       minimum_stomatal_resistance=180, soil_layer_name="Soil",
+                       saturation_volumetric_moisture_content_of_the_soil_layer=0.3,
+                       residual_volumetric_moisture_content_of_the_soil_layer=0.01,
+                       initial_volumetric_moisture_content_of_the_soil_layer=0.1),
+    "SHRUBS": Softscape(roughness="Rough", thickness=0.2, conductivity=0.5, density=1600, specific_heat=1026,
+                        thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7, plant_height=0.25,
+                        leaf_area_index=2.08, leaf_reflectivity=0.21, leaf_emissivity=0.95,
+                        minimum_stomatal_resistance=180, soil_layer_name="Soil",
+                        saturation_volumetric_moisture_content_of_the_soil_layer=0.3,
+                        residual_volumetric_moisture_content_of_the_soil_layer=0.01,
+                        initial_volumetric_moisture_content_of_the_soil_layer=0.1),
+    "METAL": Hardscape(roughness="Smooth", thickness=0.001, conductivity=45.28, density=7824, specific_heat=500,
+                       thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7),
+    "SAND": Hardscape(roughness="Rough", thickness=0.2, conductivity=0.33, density=1555, specific_heat=800,
+                      thermal_absorptance=0.85, solar_absorptance=0.65, visible_absorptance=0.65),
+    "SANDSTONE": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=6.2, density=2560, specific_heat=790,
+                           thermal_absorptance=0.6, solar_absorptance=0.55, visible_absorptance=0.55),
+    "LIMESTONE": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=3.2, density=2560, specific_heat=790,
+                           thermal_absorptance=0.96, solar_absorptance=0.55, visible_absorptance=0.55),
+    "HARDWOOD": Hardscape(roughness="MediumSmooth", thickness=0.1, conductivity=0.167, density=680, specific_heat=1630,
+                          thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7),
+    "SOFTWOOD": Hardscape(roughness="MediumSmooth", thickness=0.1, conductivity=0.129, density=496, specific_heat=1630,
+                          thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7),
+    "CONCRETE": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=1.73, density=2243, specific_heat=837,
+                          thermal_absorptance=0.9, solar_absorptance=0.65, visible_absorptance=0.65),
+    "ASPHALT": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=0.75, density=2360, specific_heat=920,
+                         thermal_absorptance=0.93, solar_absorptance=0.87, visible_absorptance=0.87),
+    "INTERFACE": Hardscape(roughness="MediumRough", thickness=0.2, conductivity=5.0, density=1000, specific_heat=1000,
+                           thermal_absorptance=0.9, solar_absorptance=0.7, visible_absorptance=0.7)
 }

@@ -1,8 +1,9 @@
 import json
 import pathlib
-import pandas as pd
-import numpy as np
 import uuid
+
+import numpy as np
+import pandas as pd
 from ladybug.epw import EPW
 from ladybug.sunpath import Sunpath
 
@@ -63,10 +64,13 @@ def load_radiance_results(directory: str):
             Array of direct and diffuse radiation incident at each point simulated
     """
     directory = pathlib.Path(directory)
-    radiation_total = pd.read_csv(directory / "total..scene..default.ill", skiprows=6, sep="\t", header=None, ).T.dropna() / 179
-    radiation_scene = pd.read_csv(directory / "direct..scene..default.ill", skiprows=6, sep="\t", header=None, ).T.dropna() / 179
+    radiation_total = pd.read_csv(directory / "total..scene..default.ill", skiprows=6, sep="\t",
+                                  header=None, ).T.dropna() / 179
+    radiation_scene = pd.read_csv(directory / "direct..scene..default.ill", skiprows=6, sep="\t",
+                                  header=None, ).T.dropna() / 179
     radiation_diffuse = (radiation_total - radiation_scene).values
-    radiation_direct = (pd.read_csv(directory / "sun..scene..default.ill", skiprows=6, sep="\t", header=None).T.dropna() / 179).values
+    radiation_direct = (pd.read_csv(directory / "sun..scene..default.ill", skiprows=6, sep="\t",
+                                    header=None).T.dropna() / 179).values
 
     print("Radiance results loaded")
     return radiation_direct, radiation_diffuse

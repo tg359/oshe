@@ -1,12 +1,16 @@
-import numpy as np
 from datetime import datetime
-from oshe.oshe import oshe
-from .helpers import chunks
 from multiprocessing import Pool
 
+import numpy as np
 
-def mean_radiant_temperature(surrounding_surfaces_temperature: float, horizontal_infrared_radiation_intensity: float, diffuse_horizontal_solar: float,
-                             direct_normal_solar: float, sun_altitude: float, ground_reflectivity: float = 0.25, sky_exposure: float = 1, radiance: bool = False):
+from oshe.oshe import oshe
+from .helpers import chunks
+
+
+def mean_radiant_temperature(surrounding_surfaces_temperature: float, horizontal_infrared_radiation_intensity: float,
+                             diffuse_horizontal_solar: float,
+                             direct_normal_solar: float, sun_altitude: float, ground_reflectivity: float = 0.25,
+                             sky_exposure: float = 1, radiance: bool = False):
     """ Perform a full outdoor sky and context surface radiant heat exchange.
 
     This method is a vectorised version of the ladybug-comfort outdoor_sky_heat_exch method https://www.ladybug.tools/ladybug-comfort/docs/_modules/ladybug_comfort/solarcal.html#outdoor_sky_heat_exch
@@ -82,7 +86,9 @@ def mrt_parallel_int(val_dict):
     return mean_radiant_temperature_part
 
 
-def mrt_parallel(threads: int, surrounding_surfaces_temperature: float, horizontal_infrared_radiation_intensity: float, diffuse_horizontal_solar: float, direct_normal_solar: float, sun_altitude: float, ground_reflectivity: float = 0.25, sky_exposure: float = 1, radiance: bool = False):
+def mrt_parallel(threads: int, surrounding_surfaces_temperature: float, horizontal_infrared_radiation_intensity: float,
+                 diffuse_horizontal_solar: float, direct_normal_solar: float, sun_altitude: float,
+                 ground_reflectivity: float = 0.25, sky_exposure: float = 1, radiance: bool = False):
     """ Run the MRT calculation across multiple processors concurrently (useful for REALLY BIG CASES)
 
     Perform a full outdoor sky and context surface radiant heat exchange.
@@ -132,7 +138,7 @@ def mrt_parallel(threads: int, surrounding_surfaces_temperature: float, horizont
         })
 
     # if __name__ ==  '__main__':
-    p=Pool(processes=threads)
+    p = Pool(processes=threads)
     output = p.map(mrt_parallel_int, dicts)
     p.close()
 
