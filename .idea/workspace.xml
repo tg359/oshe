@@ -5,7 +5,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Postprocess.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Postprocess.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/plot.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oshe/plot2.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/plot2.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -59,6 +58,10 @@
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
     <state x="552" y="165" key="#Plugins/0.0.1920.1050/1920.-212.1920.1050@0.0.1920.1050" timestamp="1588839530637" />
+    <state x="690" y="271" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1589220803591">
+      <screen x="0" y="0" width="1920" height="1050" />
+    </state>
+    <state x="690" y="271" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1920.1050@0.0.1920.1050" timestamp="1589220803591" />
     <state x="2994" y="68" key="FileChooserDialogImpl" timestamp="1588853591845">
       <screen x="1920" y="-212" width="1920" height="1050" />
     </state>

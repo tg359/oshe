@@ -10,3 +10,10 @@ The full process is as follows:
 5. The MRT for each point is calculated using the view-factors and surface temperature to surfaces, view factor to sky and sky temperature, and radiation from sun and reflected from context in the Radiance results. This method is split across n-processes to help speed up the processing of large numbers of sample points.
 6. The UTCI for each point is also calculated, again across multiple processes to speed up processing.
 7. A UTCI object is created containing the open-field results and the point-results, which can then be used to plot the time-filtered performance of the sample area. 
+
+The outputs returned from this whole process, are annual-hourly point-wise MRT and UTCI for the sample-points, and a set of plots detailing the comfort of the area assessed, and focus-point hourly performance.
+
+![May morning UTCI comfort improvement](example/plots/reduction_may_morningshoulder.png)
+![Annual comfortable hours - comparison between open field and sampled points](example/plots/comfortable_hours_annual.png)
+![Context geometry and focus points](example/plots/context_focuspts.png)
+![Focus point open field comparison](example/plots/pt0001_collected.png)

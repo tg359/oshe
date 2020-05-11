@@ -117,7 +117,7 @@ class UTCI(object):
 
         return resulting_frequency
 
-    def reduction_summary(self, threshold=4, percentile=0.95):
+    def reduction_summary(self, threshold=4, percentile=0.9):
         """ Calculate the frequency where the threshold reduction is achieved for an nth-percentile hourly values
 
         Parameters
@@ -459,7 +459,7 @@ class UTCI(object):
         ]
         for i, j in list(zip(*[months, titles])):
             sp = os.path.join(plot_directory, "comfortable_hours_{0:}.png".format(j.lower()))
-            self.plot_comfortable_hours(lower=9, upper=28, months=i, percentile=0.95, title="Comfortable hours - {}".format(j), tone_color="k", save_path=sp, close=True)
+            self.plot_comfortable_hours(lower=9, upper=28, months=i, percentile=0.9, title="Comfortable hours - {}".format(j), tone_color="k", save_path=sp, close=True)
 
 
 def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=True):
