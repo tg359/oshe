@@ -3,9 +3,23 @@ import pathlib
 import pandas as pd
 import numpy as np
 import uuid
+from ladybug.epw import EPW
+from ladybug.sunpath import Sunpath
+
+
+def sun_altitude(epw_file):
+    epw = EPW(epw_file)
+    sun_path = Sunpath.from_location(epw.location)
+    return np.array([sun_path.calculate_sun_from_hoy(i).altitude for i in range(8760)])
 
 
 def random_id():
+    """ Create a random ID number
+
+    Returns
+    -------
+    random_id : str
+    """
     return str(uuid.uuid4()).replace("-", "")[:10]
 
 
