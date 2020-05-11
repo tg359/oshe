@@ -1,7 +1,35 @@
 import json
 import pathlib
-import pandas as pd
+import uuid
+
 import numpy as np
+import pandas as pd
+from ladybug.epw import EPW
+from ladybug.sunpath import Sunpath
+
+
+def sun_altitude(epw_file):
+    epw = EPW(epw_file)
+    sun_path = Sunpath.from_location(epw.location)
+    return np.array([sun_path.calculate_sun_from_hoy(i).altitude for i in range(8760)])
+
+
+def random_id():
+    """ Create a random ID number
+
+    Returns
+    -------
+    random_id : str
+    """
+    return str(uuid.uuid4()).replace("-", "")[:10]
+
+
+def flatten(nested_list):
+    if nested_list == []:
+        return nested_list
+    if isinstance(nested_list[0], list):
+        return flatten(nested_list[0]) + flatten(nested_list[1:])
+    return nested_list[:1] + flatten(nested_list[1:])
 
 
 def load_json(json_file: str):
@@ -36,10 +64,13 @@ def load_radiance_results(directory: str):
             Array of direct and diffuse radiation incident at each point simulated
     """
     directory = pathlib.Path(directory)
-    radiation_total = pd.read_csv(directory / "total..scene..default.ill", skiprows=6, sep="\t", header=None, ).T.dropna() / 179
-    radiation_scene = pd.read_csv(directory / "direct..scene..default.ill", skiprows=6, sep="\t", header=None, ).T.dropna() / 179
+    radiation_total = pd.read_csv(directory / "total..scene..default.ill", skiprows=6, sep="\t",
+                                  header=None, ).T.dropna() / 179
+    radiation_scene = pd.read_csv(directory / "direct..scene..default.ill", skiprows=6, sep="\t",
+                                  header=None, ).T.dropna() / 179
     radiation_diffuse = (radiation_total - radiation_scene).values
-    radiation_direct = (pd.read_csv(directory / "sun..scene..default.ill", skiprows=6, sep="\t", header=None).T.dropna() / 179).values
+    radiation_direct = (pd.read_csv(directory / "sun..scene..default.ill", skiprows=6, sep="\t",
+                                    header=None).T.dropna() / 179).values
 
     print("Radiance results loaded")
     return radiation_direct, radiation_diffuse
@@ -80,6 +111,7 @@ def load_points_xyz(file_path: str):
 def chunk(enumerable, n=None):
     enumerable = np.array(enumerable)
     return [enumerable[i:i + n] for i in range(0, enumerable.shape[0], n)]
+
 
 def chunks(enumerable, n=None):
     enumerable = np.array(enumerable)

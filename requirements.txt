@@ -1,0 +1,10 @@
+eppy==0.5.52
+ladybug-comfort==0.9.2
+ladybug-geometry==1.19.0
+lbt-honeybee==0.1.16
+lbt-ladybug==0.23.0
+matplotlib==3.2.1
+numpy==1.18.4
+pandas==1.0.3
+Pillow==7.1.2
+PsychroLib==2.5.0

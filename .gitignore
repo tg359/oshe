@@ -1,5 +1,11 @@
 # User
 projects/
+*.3dmbak
+*.eso
+*.smx
+*.rgb
+*.dc
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
