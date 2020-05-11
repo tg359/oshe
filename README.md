@@ -13,7 +13,7 @@ The full process is as follows:
 
 The outputs returned from this whole process, are annual-hourly point-wise MRT and UTCI for the sample-points, and a set of plots detailing the comfort of the area assessed, and focus-point hourly performance.
 
-![May morning UTCI comfort improvement](example/plots/reduction_may_morningshoulder.png)
-![Annual comfortable hours - comparison between open field and sampled points](example/plots/comfortable_hours_annual.png)
-![Context geometry and focus points](example/plots/context_focuspts.png)
-![Focus point open field comparison](example/plots/pt0001_collected.png)
+<img src="https://github.com/tg359/oshe/blob/ghadan21/example/plots/reduction_may_morningshoulder.png" alt="May morning UTCI comfort improvement" width=33%> 
+<img src="https://github.com/tg359/oshe/blob/ghadan21/example/plots/comfortable_hours_annual.png" alt="Annual comfortable hours - comparison between open field and sampled points" width=33%> 
+<img src="https://github.com/tg359/oshe/blob/ghadan21/example/plots/context_focuspts.png" alt="Context geometry and focus points" width=33%> 
+<img src="https://github.com/tg359/oshe/blob/ghadan21/example/plots/pt0001_collected.png" alt="Focus point open field comparison" width=100%> 
