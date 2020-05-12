@@ -1,15 +1,14 @@
 
-npython:S1192³"NDefine a constant instead of duplicating this literal "07:00 - 10:00" 6 times.(ïŒÆá8´Çñ.
-xpython:S107·"YMethod "utci_reduction_heatmap" has 8 parameters, which is greater than the 7 authorized.(ÂõÈû8’ùµ­.
-ypython:S1192º"TDefine a constant instead of duplicating this literal "2019-01-01 00:00:00" 4 times.(ØÛšûÿÿÿÿ8´Çñ.
-python:S5717L"]Change this default value to "None" and initialize this parameter inside the function/method.(ÈÖ®øÿÿÿÿ8´Çñ.
-ypython:S1192º"TDefine a constant instead of duplicating this literal "2018-01-01 00:00:00" 4 times.(ØÛšûÿÿÿÿ8´Çñ.
-npython:S1192´"NDefine a constant instead of duplicating this literal "16:00 - 19:00" 6 times.(¥ôí8´Çñ.
-Cpython:S125¡"Remove this commented out code.(ºñæˆÿÿÿÿÿ8’ùµ­.
-€python:S1192»"`Define a constant instead of duplicating this literal "Universal Thermal Climate Index" 5 times.(îıì§8´Çñ.
-ppython:S1192"QDefine a constant instead of duplicating this literal "Plot saved to {}" 7 times.(•é×H8´Çñ.
-mpython:S101"JRename class "UTCI_" to match the regular expression ^[A-Z_][a-zA-Z0-9]+$.(ºö×şÿÿÿÿ8àšå¬.
-lpython:S107Ì"MMethod "plot_plan" has 13 parameters, which is greater than the 7 authorized.(µ’İ8’ùµ­.
-Mpython:S1481Å"-Remove the unused local variable "month_idx".(œŠµ¢8’ùµ­.
-Gpython:S1481ó"'Remove the unused local variable "tcl".(æ¡ÕÑ8’ùµ­.
-tpython:S3776Ì"TRefactor this function to reduce its Cognitive Complexity from 29 to the 15 allowed.(µ’İ8’ùµ­.
+.python:S1700"Rename field "utci"(»§‘Úşÿÿÿÿ
+vpython:S3776"TRefactor this function to reduce its Cognitive Complexity from 22 to the 15 allowed.(ı¶˜¢ûÿÿÿÿ8ºêç€ .
+mpython:S1192"QDefine a constant instead of duplicating this literal "Plot saved to {}" 6 times.(•é×H8ºêç€ .
+zpython:S107"YMethod "plot_comfortable_hours" has 9 parameters, which is greater than the 7 authorized.(ÿ‰„¨ıÿÿÿÿ8Ù¶Ç¤ .
+kpython:S107"OMethod "plot_context" has 8 parameters, which is greater than the 7 authorized.(­ó½«8ºêç€ .
+tpython:S107"XFunction "utci_day_comparison" has 8 parameters, which is greater than the 7 authorized.(ÆÖò8ü«¥ .
+Dpython:S1481"'Remove the unused local variable "tcl".(æ¡ÕÑ8ºêç€ .
+Gpython:S1481"%Remove the unused local variable "e".(¼–¯¸ÿÿÿÿÿ8ü«¥ .
+‚python:S1192"`Define a constant instead of duplicating this literal "Universal Thermal Climate Index" 3 times.(á°ÍÉüÿÿÿÿ8ü«¥ .
+Gpython:S1481"%Remove the unused local variable "e".(¼–¯¸ÿÿÿÿÿ8ü«¥ .
+qpython:S3776"TRefactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.(­ó½«8ºêç€ .
+ppython:S107"OMethod "plot_contour" has 9 parameters, which is greater than the 7 authorized.(ı¶˜¢ûÿÿÿÿ8ºêç€ .
+qpython:S3776"TRefactor this function to reduce its Cognitive Complexity from 19 to the 15 allowed.(¸ÀæÆ8ü«¥ .

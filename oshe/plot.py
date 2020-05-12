@@ -778,8 +778,8 @@ def utci_day_comparison(hourly_utci_values_a, hourly_utci_values_b, months=np.ar
     fig, ax = plt.subplots(1, 1, figsize=(7.5, 3.5))
 
     # Plot input values
-    ax.plot(a, label=names[0], c="#00A4E2", lw=2, zorder=2)
-    ax.plot(b, label=names[1], c="#FF3E3E", lw=2, zorder=2)
+    ax.plot(a, label=names[1], c="#00A4E2", lw=2, zorder=2)
+    ax.plot(b, label=names[0], c="#FF3E3E", lw=2, zorder=2)
 
     # Set plot limits
     ylims = [min([a.min(), b.min()]) - 3, max([a.max(), b.max()]) + 3]
