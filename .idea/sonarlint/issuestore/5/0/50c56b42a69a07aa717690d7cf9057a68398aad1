@@ -1,7 +1,7 @@
 
-opython:S107D"LMethod "__init__" has 19 parameters, which is greater than the 7 authorized.(ïÅ£èüÿÿÿÿ8ÖÜ’É .
-Ipython:S1481s"%Remove the unused local variable "e".(øçöøüÿÿÿÿ8ÖÜ’É .
 opython:S107±"KMethod "__init__" has 9 parameters, which is greater than the 7 authorized.(ïÅ£èüÿÿÿÿ8ÖÜ’É .
 Jpython:S1481Í"%Remove the unused local variable "e".(øçöøüÿÿÿÿ8ÖÜ’É .
-jpython:S107€"KMethod "__init__" has 8 parameters, which is greater than the 7 authorized.(¾Èşß8ÖÜ’É .
 Jpython:S1481Ÿ"%Remove the unused local variable "e".(øçöøüÿÿÿÿ8ÖÜ’É .
+opython:S107D"LMethod "__init__" has 19 parameters, which is greater than the 7 authorized.(ïÅ£èüÿÿÿÿ8ÖÜ’É .
+jpython:S107€"KMethod "__init__" has 8 parameters, which is greater than the 7 authorized.(¾Èşß8ÖÜ’É .
+Ipython:S1481s"%Remove the unused local variable "e".(øçöøüÿÿÿÿ8ÖÜ’É .

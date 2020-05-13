@@ -51,7 +51,7 @@ def load_json(json_file: str):
 
 
 def load_radiance_results(directory: str):
-    """ Load the ILL files from a Radiance simulation output (simulated using the Honeybee workflow)
+    """ Load the ILL files from a Radiance simulation output (simulated using the Honeybee workflow and Radiance 5.2)
 
     Parameters
     ----------
@@ -60,17 +60,26 @@ def load_radiance_results(directory: str):
 
     Returns
     -------
-        [radiation_direct, radiaction_diffuse] : float
+        [radiation_direct, radiation_diffuse] : float
             Array of direct and diffuse radiation incident at each point simulated
     """
+
+    def coerce_float(val):
+        try:
+            return np.float64(val)
+        except Exception as e:
+            return np.nan
+
     directory = pathlib.Path(directory)
-    radiation_total = pd.read_csv(directory / "total..scene..default.ill", skiprows=6, sep="\t",
-                                  header=None, ).T.dropna() / 179
-    radiation_scene = pd.read_csv(directory / "direct..scene..default.ill", skiprows=6, sep="\t",
-                                  header=None, ).T.dropna() / 179
+
+    radiation_total = pd.read_csv(directory / "total..scene..default.ill", sep="\t", converters={0: coerce_float},
+                                  names=range(8760)).dropna().reset_index(drop=True).T / 179
+    radiation_scene = pd.read_csv(directory / "direct..scene..default.ill", sep="\t", converters={0: coerce_float},
+                                  names=range(8760)).dropna().reset_index(drop=True).T / 179
+    radiation_direct = (pd.read_csv(directory / "sun..scene..default.ill", sep="\t", converters={0: coerce_float},
+                                    names=range(8760)).dropna().reset_index(drop=True).T / 179).values
+
     radiation_diffuse = (radiation_total - radiation_scene).values
-    radiation_direct = (pd.read_csv(directory / "sun..scene..default.ill", skiprows=6, sep="\t",
-                                    header=None).T.dropna() / 179).values
 
     print("Radiance results loaded")
     return radiation_direct, radiation_diffuse

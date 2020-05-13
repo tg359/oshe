@@ -171,6 +171,13 @@ class UTCI(object):
         p = PatchCollection(flatten(patches), match_original=True)
         ax.add_collection(p)
 
+        # Add geometry filled patches legend
+        lgd_elements = []
+        for k, v in geo_data.items():
+            lgd_elements.append(geo_data[k]["lgd"])
+        lgd = ax.legend(handles=lgd_elements, loc='center left', bbox_to_anchor=(1, 0.5, 1., 0), frameon=False)
+        [plt.setp(i, color=tone_color) for i in lgd.get_texts()]
+
         if pts:
             # Add sample point locations
             ax.scatter(x, y, c=tone_color, s=1, marker="x", alpha=0.75, zorder=9)
@@ -193,7 +200,7 @@ class UTCI(object):
         plt.tight_layout()
 
         if save_path:
-            fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False)
+            fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False, bbox_extra_artists=(lgd,))
             print("Plot saved to {}".format(save_path))
         if close:
             plt.close()
@@ -547,6 +554,22 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ec": "#BEBEBE",
             "ls": ":",
             "name": "Concrete"},
+        "GND_CONCRETELIGHT": {
+            "alpha": 1.0,
+            "fc": "#DBDBDB",
+            "zorder": 1,
+            "lw": 0.25,
+            "ec": "#DBDBDB",
+            "ls": ":",
+            "name": "Concrete (Light)"},
+        "GND_CONCRETEDARK": {
+            "alpha": 1.0,
+            "fc": "#8F8F8F",
+            "zorder": 1,
+            "lw": 0.25,
+            "ec": "#8F8F8F",
+            "ls": ":",
+            "name": "Concrete (Dark)"},
         "GND_GRASS": {
             "alpha": 1.0,
             "fc": "#005800",
@@ -555,6 +578,14 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ec": "#005800",
             "ls": ":",
             "name": "Grass"},
+        "GND_ASPHALT": {
+            "alpha": 1.0,
+            "fc": "#696969",
+            "zorder": 1,
+            "lw": 0.25,
+            "ec": "#696969",
+            "ls": ":",
+            "name": "Asphalt"},
         "GND_STONE": {
             "alpha": 1.0,
             "fc": "#FFDEAD",
@@ -581,12 +612,20 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "name": "Water"},
         "SHD_SOLID": {
             "alpha": 0.8,
-            "fc": "#696969",
+            "fc": "#C9B4A5",
             "zorder": 3,
             "lw": 1.0,
-            "ec": "#696969",
+            "ec": "#C9B4A5",
             "ls": "-",
             "name": "Solid shade"},
+        "SHD_FABRIC": {
+            "alpha": 0.65,
+            "fc": "#E6CDBC",
+            "zorder": 3,
+            "lw": 1.0,
+            "ec": "#E6CDBC",
+            "ls": "-",
+            "name": "Fabric shade"},
         "VEG_GHAF": {
             "alpha": 0.3,
             "fc": "#007F00",
@@ -616,15 +655,17 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
     # Create patch collection for plotting
     for k, v in geo_data.items():
         patches = []
-        for verts in v["vertices"]:
-            if underlay:
-                patches.append(
-                    Polygon(verts, closed=True, fill=False, fc=None, ec="#D1D1D1", lw=1, ls="-", zorder=8, alpha=0.25))
-            else:
-                patches.append(Polygon(verts, closed=True, fill=True, fc=v["fc"], ec=v["ec"], lw=v["lw"], ls=v["ls"],
-                                       zorder=v["zorder"], alpha=v["alpha"]))
+        try:
+            for verts in v["vertices"]:
+                if underlay:
+                    patches.append(
+                        Polygon(verts, closed=True, fill=False, fc=None, ec="#D1D1D1", lw=1, ls="-", zorder=8, alpha=0.25))
+                else:
+                    patches.append(Polygon(verts, closed=True, fill=True, fc=v["fc"], ec=v["ec"], lw=v["lw"], ls=v["ls"],
+                                           zorder=v["zorder"], alpha=v["alpha"]))
+        except Exception as e:
+            print("Material: {0:} doesn't exist in the formatting dictionary. See the load_radiance_geometries() method.".format(k))
         geo_data[k]["patches"] = patches
-
     return geo_data
 
 

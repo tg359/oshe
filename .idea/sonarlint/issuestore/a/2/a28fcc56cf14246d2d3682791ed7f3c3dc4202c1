@@ -1,14 +1,14 @@
 
-.python:S1700"Rename field "utci"(»§‘Ϊώÿÿÿÿ
-vpython:S3776"TRefactor this function to reduce its Cognitive Complexity from 22 to the 15 allowed.(ύ¶Άϋÿÿÿÿ8Ίκη€ .
-mpython:S1192"QDefine a constant instead of duplicating this literal "Plot saved to {}" 6 times.(•ιΧH8Ίκη€ .
-zpython:S107"YMethod "plot_comfortable_hours" has 9 parameters, which is greater than the 7 authorized.(ÿ‰„¨ύÿÿÿÿ8Ω¶Η¤ .
-kpython:S107"OMethod "plot_context" has 8 parameters, which is greater than the 7 authorized.(­σ½«8Ίκη€ .
-tpython:S107"XFunction "utci_day_comparison" has 8 parameters, which is greater than the 7 authorized.(ΖΦς8ό«¥ .
-Dpython:S1481"'Remove the unused local variable "tcl".(ζ΅ΥΡ8Ίκη€ .
-Gpython:S1481"%Remove the unused local variable "e".(Ό–―Έÿÿÿÿÿ8ό«¥ .
-‚python:S1192"`Define a constant instead of duplicating this literal "Universal Thermal Climate Index" 3 times.(α°ΝΙόÿÿÿÿ8ό«¥ .
-Gpython:S1481"%Remove the unused local variable "e".(Ό–―Έÿÿÿÿÿ8ό«¥ .
-qpython:S3776"TRefactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.(­σ½«8Ίκη€ .
-ppython:S107"OMethod "plot_contour" has 9 parameters, which is greater than the 7 authorized.(ύ¶Άϋÿÿÿÿ8Ίκη€ .
-qpython:S3776"TRefactor this function to reduce its Cognitive Complexity from 19 to the 15 allowed.(ΈΐζΖ8ό«¥ .
+tpython:S3776"TRefactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.(­σ½«8Ίκη€ .
+Jpython:S1481δ"%Remove the unused local variable "e".(Ό–―Έÿÿÿÿÿ8ό«¥ .
+ppython:S1192Ε"QDefine a constant instead of duplicating this literal "Plot saved to {}" 6 times.(•ιΧH8Ίκη€ .
+Jpython:S1481„"%Remove the unused local variable "e".(Ό–―Έÿÿÿÿÿ8ό«¥ .
+npython:S107"OMethod "plot_context" has 8 parameters, which is greater than the 7 authorized.(­σ½«8Ίκη€ .
+tpython:S3776μ"TRefactor this function to reduce its Cognitive Complexity from 19 to the 15 allowed.(ΈΐζΖ8ό«¥ .
+0python:S1700"Rename field "utci"(»§‘Ϊώÿÿÿÿ
+ypython:S3776Ι"TRefactor this function to reduce its Cognitive Complexity from 22 to the 15 allowed.(ύ¶Άϋÿÿÿÿ8Ίκη€ .
+}python:S107°"YMethod "plot_comfortable_hours" has 9 parameters, which is greater than the 7 authorized.(ÿ‰„¨ύÿÿÿÿ8Ω¶Η¤ .
+wpython:S107χ"XFunction "utci_day_comparison" has 8 parameters, which is greater than the 7 authorized.(ΖΦς8ό«¥ .
+Gpython:S1481ψ"'Remove the unused local variable "tcl".(ζ΅ΥΡ8Ίκη€ .
+…python:S1192ÿ"`Define a constant instead of duplicating this literal "Universal Thermal Climate Index" 3 times.(α°ΝΙόÿÿÿÿ8ό«¥ .
+spython:S107Ι"OMethod "plot_contour" has 9 parameters, which is greater than the 7 authorized.(ύ¶Άϋÿÿÿÿ8Ίκη€ .
