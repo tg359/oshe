@@ -17,7 +17,6 @@ Versioning of tools used in this process is quite picky, and errors will likely 
     - Individual Python packages listed in `./requirements.txt`
  
  ## Process
- The full process is as follows:
 1. Define geometry and materials in the Rhino model (see `./example/RH6_model.3dm` for an example structure). The important things to remember for this are that the ground zone should be a closed Brep, and all geometry needs to be clean or coincident vertices, nurbs-curve boundaries or degenerate faces.
 2. Run the `./GenerateCase.gh` script to create the `runenergyplus.bat` and `runradiance.bat` files, then while those are running create the `recipe.json` file containing point-surface-sky view factors. It is worth using the simplified EnergyPlus simulation first to check that a valid simulatable model has been created!
 3. Once the simulations are complete, run the `PostProcess.ipynb` script to load the `recipe.json`, annual point-radiation results from Radiance and annual surface temperature results from EnergyPlus.
@@ -31,4 +30,5 @@ The outputs returned from this whole process, are annual-hourly point-wise MRT a
 ![May morning UTCI comfort improvement](./example/plots/reduction_may_morningshoulder.png)
 ![Annual comfortable hours - comparison between open field and sampled points](./example/plots/comfortable_hours_annual.png)
 ![Context geometry and focus points](./example/plots/context_focuspts.png)
+![Open field UTCI comfort](./example/plots/openfield_comfortheatmap.png)
 ![Focus point open field comparison](./example/plots/pt0044_collected.png)
