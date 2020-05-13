@@ -27,6 +27,7 @@ The full process is as follows:
 
 The outputs returned from this whole process, are annual-hourly point-wise MRT and UTCI for the sample-points, and a set of plots detailing the comfort of the area assessed, and focus-point hourly performance.
 
+
 <div class="tg-wrap">
     <table>
         <tbody>
@@ -43,7 +44,7 @@ The outputs returned from this whole process, are annual-hourly point-wise MRT a
             </tr>
             <tr>
                 <td colspan="3">
-                    <img src="https://github.com/tg359/oshe/blob/master/example/plots/pt0001_collected.png" alt="Focus point open field comparison"> 
+                    <img src="https://github.com/tg359/oshe/blob/master/example/plots/pt0044_collected.png" alt="Focus point open field comparison"> 
                 </td>
             </tr>
         </tbody>
