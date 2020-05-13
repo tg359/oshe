@@ -13,7 +13,7 @@ Versioning of tools used in this process is quite picky, and errors will likely 
 - Grasshopper plugins:
     - [Human for Rhino 6](https://www.food4rhino.com/app/human) - used for dynamic layer/geometry referencing between Grasshopper and Rhino
     - [Ladybug 0.0.68 and Honeybee 0.0.65 [Legacy Plugins]](https://www.food4rhino.com/app/ladybug-tools) - used for generating EnergyPlus case, and view factors between sample points and surfaces
-    - [Honeybee[+] 0.0.04](https://www.food4rhino.com/app/ladybug-tools) - used for generating Radiance case. NOTE: be sure to update this plugin using the in-built `HoneybeePlus Installer` component to get the latest version in Grasshopper (0.0.05)
+    - [Honeybee[+] 0.0.04](https://www.food4rhino.com/app/ladybug-tools) - used for generating Radiance case. **NOTE**: be sure to update this plugin using the in-built `HoneybeePlus Installer` component to get the latest version in Grasshopper (0.0.05)
     - Individual Python packages listed in `./requirements.txt`
  
 The full process is as follows:
