@@ -470,11 +470,11 @@ class UTCI(object):
         for fp in focus_pts:
 
             sp = os.path.join(plot_directory, "pt{0:04d}_reductionheatmap.png".format(fp))
-            utci_reduction_heatmap(self.utci_difference[fp].values, save_path=sp, close=True, tone_color=tone_color)
+            utci_reduction_heatmap(self.utci_difference[fp].values, save_path=sp, title="Universal Thermal Climate Index Difference - Point {0:}".format(fp), close=True, tone_color=tone_color)
             b = Image.open(sp)
 
             sp = os.path.join(plot_directory, "pt{0:04d}_comfortheatmap.png".format(fp))
-            utci_comfort_heatmap(self.utci[fp].values, save_path=sp, close=True, tone_color=tone_color)
+            utci_comfort_heatmap(self.utci[fp].values, save_path=sp, title="Universal Thermal Climate Index - Point {0:}".format(fp), close=True, tone_color=tone_color)
             a = Image.open(sp)
 
             # Profiles
