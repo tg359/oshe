@@ -9,11 +9,11 @@ Versioning of tools used in this process is quite picky, and errors will likely 
 - Programs
     - Rhino 6 (and Grasshopper included with this program)
     - [Radiance 5.2](https://github.com/NREL/Radiance/releases/tag/5.2)
-    - [OpenStudio 2.7.0](https://github.com/NREL/OpenStudio/releases/tag/v2.7.0)
+    - [OpenStudio 2.9.0](https://github.com/NREL/OpenStudio/releases/tag/v2.9.0)
 - Grasshopper plugins:
     - [Human for Rhino 6](https://www.food4rhino.com/app/human) - used for dynamic layer/geometry referencing between Grasshopper and Rhino
     - [Ladybug 0.0.68 and Honeybee 0.0.65 [Legacy Plugins]](https://www.food4rhino.com/app/ladybug-tools) - used for generating EnergyPlus case, and view factors between sample points and surfaces
-    - [Honeybee[+] 0.0.04](https://www.food4rhino.com/app/ladybug-tools) - used for generating Radiance case. **NOTE**: be sure to update this plugin using the in-built `HoneybeePlus Installer` component to get the latest version in Grasshopper (0.0.05)
+    - [Honeybee[+] 0.0.04](https://www.food4rhino.com/app/ladybug-tools) - used for generating Radiance case. **NOTE**: be sure to update this plugin using the [`HoneybeePlus Update`](https://discourse.ladybug.tools/t/honeybee-update-component-error-solution-exception-windowserror/8863/2) component to get the latest version in Grasshopper (0.0.05)
     - Individual Python packages listed in `./requirements.txt`
  
  ## Process
