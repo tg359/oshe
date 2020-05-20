@@ -34,8 +34,7 @@ def outdoor_sky_heat_exchange(visible_surfaces_temperature: float, horizontal_in
                               diffuse_horizontal_solar_radiation: float, direct_normal_solar_radiation: float,
                               solar_altitude: float, sky_exposure: float = 1, fraction_body_exposed: float = 1,
                               floor_reflectance: float = 0.25, posture: str = 'standing', sharp: int = 135,
-                              body_absorptivity: float = 0.7, body_emissivity: float = 0.95,
-                              radiance: bool = False) -> float:
+                              body_absorptivity: float = 0.7, body_emissivity: float = 0.95) -> float:
     """ Perform a full outdoor sky radiant heat exchange.
     Parameters
     ----------
@@ -63,8 +62,6 @@ def outdoor_sky_heat_exchange(visible_surfaces_temperature: float, horizontal_in
         A number between 0 and 1 representing the average shortwave absorptivity of the body (including clothing and skin color). Typical clothing values - white: 0.2, khaki: 0.57, black: 0.88 Typical skin values - white: 0.57, brown: 0.65, black: 0.84 Default is 0.7 for average (brown) skin and medium clothing.
     body_emissivity : float
         A number between 0 and 1 representing the average long-wave emissivity of the body.  Default is 0.95, which is almost always the case except in rare situations of wearing metallic clothing.
-    radiance : bool
-        If True, sky exposure is 1 (using the radiance results only), else use the sky exposure values
     Returns
     -------
     mean_radiant_temperature : float
@@ -77,7 +74,7 @@ def outdoor_sky_heat_exchange(visible_surfaces_temperature: float, horizontal_in
     # Calculate the influence of shortwave irradiance
     if solar_altitude >= 0:
         s_flux = body_solar_flux_from_parts(diffuse_horizontal_solar_radiation, direct_normal_solar_radiation,
-                                            solar_altitude, sharp, 1 if radiance else sky_exposure,
+                                            solar_altitude, sharp, sky_exposure,
                                             fraction_body_exposed, floor_reflectance, posture)
         short_effective_radiant_field = effective_radiant_field_from_body_solar_flux(s_flux, body_absorptivity,
                                                                                      body_emissivity)

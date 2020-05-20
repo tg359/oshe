@@ -131,6 +131,7 @@ class UTCI(object):
         """
         morn_str = "07:00 - 10:00"
         aft_str = "16:00 - 19:00"
+
         varz = [
             [self.mask_shoulder_morning, ["Annual", morn_str]],
             [self.mask_shoulder_afternoon, ["Annual", aft_str]],
@@ -141,17 +142,30 @@ class UTCI(object):
         ]
 
         # Create the "nth percentile" point
-        temp = self.utci_difference.quantile(percentile, axis=1)
+        percentile_pt = self.utci.quantile(1 - percentile, axis=1)
 
         # Get the number of hours within specified ranges where threshold reduction is met
         d = {
-            "Annual": {morn_str: None, aft_str: None},
-            "May": {morn_str: None, aft_str: None},
-            "October": {morn_str: None, aft_str: None}
+            "Annual": {
+                morn_str: utci_reduction(self.utci_openfield, percentile_pt, months=np.arange(1, 13, 1),
+                                         hours=[7, 8, 9, 10], threshold=threshold),
+                aft_str: utci_reduction(self.utci_openfield, percentile_pt, months=np.arange(1, 13, 1),
+                                        hours=[16, 17, 18, 19], threshold=threshold)
+            },
+            "May": {
+                morn_str: utci_reduction(self.utci_openfield, percentile_pt, months=[5],
+                                         hours=[7, 8, 9, 10], threshold=threshold),
+                aft_str: utci_reduction(self.utci_openfield, percentile_pt, months=[5],
+                                        hours=[16, 17, 18, 19], threshold=threshold)
+            },
+            "October": {
+                morn_str: utci_reduction(self.utci_openfield, percentile_pt, months=[10],
+                                         hours=[7, 8, 9, 10], threshold=4),
+                aft_str: utci_reduction(self.utci_openfield, percentile_pt, months=[10],
+                                        hours=[16, 17, 18, 19], threshold=4)
+            }
         }
-        for i, [j, k] in varz:
-            temp_filtered = temp[i]
-            d[j][k] = ((temp_filtered >= threshold).sum() / temp_filtered.count())
+
         return pd.DataFrame.from_dict(d)
 
     def plot_context(self, rad_files, pts=False, label_pts=None, highlight_pt=None, tone_color="k", save_path=None,
@@ -948,3 +962,14 @@ def get_aggregate_day(utci_values, lower=9, upper=28, months=[1, 2, 3, 4, 5, 6, 
     temp.index = pd.date_range("2018-05-15 00:00:00", freq="60T", periods=24, closed="left")
 
     return temp
+
+def utci_reduction(utci_a, utci_b, months=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], hours=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], threshold=4, prnt=False):
+    months = np.array(months)
+    hours = np.array(hours) - 1  # Needed to add -1 here to fix the indexing issue for hour of year
+    utci_difference = utci_a - utci_b
+    mask = utci_difference.index.hour.isin(hours) & utci_difference.index.month.isin(months)
+    filtered_difference = utci_difference[mask]
+    time_achieved = (filtered_difference >= threshold).mean()
+    if prnt:
+        print("Months: [{0:}]\nHours: [{1:}]\nThreshold: {2:}\n% UTCI reduction: {3:0.2%}".format(", ".join(months.astype(str)), ", ".join(hours.astype(str)), threshold, time_achieved))
+    return time_achieved

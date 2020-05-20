@@ -142,23 +142,26 @@ class Shade(object):
         idf = IDF(io.StringIO(""))
         eppy_objects = []
 
+        # Create referencible shade schedule
+        shade_schedule_id = random_id()
+
         # Create shade object
         transmittance_schedule_type_limit = idf.newidfobject("SCHEDULETYPELIMITS")
-        transmittance_schedule_type_limit.Name = "constant"
+        transmittance_schedule_type_limit.Name = "shade_schedule_type_limit_{0:}".format(shade_schedule_id)
         transmittance_schedule_type_limit.Lower_Limit_Value = 0
         transmittance_schedule_type_limit.Upper_Limit_Value = 1
         transmittance_schedule_type_limit.Numeric_Type = "Continuous"
         eppy_objects.append(transmittance_schedule_type_limit)
 
         transmittance_schedule = idf.newidfobject("SCHEDULE:CONSTANT")
-        transmittance_schedule.Name = "constant"
-        transmittance_schedule.Schedule_Type_Limits_Name = "constant"
+        transmittance_schedule.Name = "shade_schedule_constant_{0:}".format(shade_schedule_id)
+        transmittance_schedule.Schedule_Type_Limits_Name = "shade_schedule_type_limit_{0:}".format(shade_schedule_id)
         transmittance_schedule.Hourly_Value = 0
         eppy_objects.append(transmittance_schedule)
 
         shade = idf.newidfobject("SHADING:SITE:DETAILED")
         shade.Name = random_id()
-        shade.Transmittance_Schedule_Name = "constant"
+        shade.Transmittance_Schedule_Name = "shade_schedule_constant_{0:}".format(shade_schedule_id)
         shade.Number_of_Vertices = len(self.vertices)
         for nn, vtx in enumerate(self.vertices):
             setattr(shade, "Vertex_{}_Xcoordinate".format(nn + 1), vtx.x)

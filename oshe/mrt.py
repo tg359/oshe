@@ -10,7 +10,7 @@ from .helpers import chunks
 def mean_radiant_temperature(surrounding_surfaces_temperature: float, horizontal_infrared_radiation_intensity: float,
                              diffuse_horizontal_solar: float,
                              direct_normal_solar: float, sun_altitude: float, ground_reflectivity: float = 0.25,
-                             sky_exposure: float = 1, radiance: bool = False):
+                             sky_exposure: float = 1):
     """ Perform a full outdoor sky and context surface radiant heat exchange.
 
     This method is a vectorised version of the ladybug-comfort outdoor_sky_heat_exch method https://www.ladybug.tools/ladybug-comfort/docs/_modules/ladybug_comfort/solarcal.html#outdoor_sky_heat_exch
@@ -31,8 +31,6 @@ def mean_radiant_temperature(surrounding_surfaces_temperature: float, horizontal
         A number between 0 and 1 the represents the reflectance of the floor. Default is for 0.25 which is characteristic of outdoor grass or dry bare soil.
     sky_exposure : float
         A number between 0 and 1 representing the fraction of the sky vault in occupant’s view. Default is 1 for outdoors in an open field.
-    radiance : bool
-        True if diffuse and direct radiation from a Radiance simulation
 
     Returns
     -------
@@ -52,8 +50,7 @@ def mean_radiant_temperature(surrounding_surfaces_temperature: float, horizontal
         direct_normal_solar_radiation=np.array([direct_normal_solar]),
         solar_altitude=np.array([sun_altitude]),
         sky_exposure=np.array([sky_exposure]),
-        floor_reflectance=np.array([ground_reflectivity]),
-        radiance=radiance
+        floor_reflectance=np.array([ground_reflectivity])
     )
 
     td = (datetime.now() - start_time).total_seconds()
@@ -79,8 +76,7 @@ def mrt_parallel_int(val_dict):
         direct_normal_solar=val_dict["dirrad"],
         sun_altitude=val_dict["solalt"],
         ground_reflectivity=val_dict["gndref"],
-        sky_exposure=val_dict["skyexp"],
-        radiance=val_dict["radrun"]
+        sky_exposure=val_dict["skyexp"]
     )[0]
     print("Thread #{0:} complete".format(val_dict["thread"]))
     return mean_radiant_temperature_part
@@ -113,8 +109,6 @@ def mrt_parallel(threads: int, surrounding_surfaces_temperature: float, horizont
         A number between 0 and 1 the represents the reflectance of the floor. Default is for 0.25 which is characteristic of outdoor grass or dry bare soil.
     sky_exposure : float
         A number between 0 and 1 representing the fraction of the sky vault in occupant’s view. Default is 1 for outdoors in an open field.
-    radiance : bool
-        True if diffuse and direct radiation from a Radiance simulation
 
     Returns
     -------
@@ -133,7 +127,6 @@ def mrt_parallel(threads: int, surrounding_surfaces_temperature: float, horizont
             "solalt": sun_altitude,
             "gndref": chunks(ground_reflectivity, threads)[i] * 0.5,
             "skyexp": chunks(sky_exposure, threads)[i],
-            "radrun": radiance,
             "thread": i
         })
 

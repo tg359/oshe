@@ -86,9 +86,11 @@ def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade =
     try:
         # Load monthly ground temperatures from weather-file and assign to shallow objects
         ground_temperature_shallow = idf.newidfobject("SITE:GROUNDTEMPERATURE:SHALLOW")
+        ground_temperature_building_surface = idf.newidfobject("SITE:GROUNDTEMPERATURE:BUILDINGSURFACE")
         for i, j in list(zip(*[pd.date_range("2018", "2019", freq="1M").strftime("%B"),
                                EPW(epw_file).monthly_ground_temperature[0.5].values])):
             setattr(ground_temperature_shallow, "{}_Surface_Ground_Temperature".format(i), j)
+            setattr(ground_temperature_building_surface, "{}_Ground_Temperature".format(i), j)
     except Exception as e:
         warnings.warn(
             "Something went wrong - shallow ground temperatures (0.5m depth) from weatherfile not included in simulation\n{0:}".format(
