@@ -117,13 +117,14 @@ class UTCI(object):
 
         return resulting_frequency
 
-    def reduction_summary(self, threshold=4, percentile=0.9):
+    def reduction_summary(self, threshold=4, percentile=0.9, focus_pts=None):
         """ Calculate the frequency where the threshold reduction is achieved for an nth-percentile hourly values
 
         Parameters
         ----------
         threshold
         percentile
+        focus_pts
 
         Returns
         -------
@@ -132,15 +133,7 @@ class UTCI(object):
         morn_str = "07:00 - 10:00"
         aft_str = "16:00 - 19:00"
 
-        varz = [
-            [self.mask_shoulder_morning, ["Annual", morn_str]],
-            [self.mask_shoulder_afternoon, ["Annual", aft_str]],
-            [self.mask_may_morning, ["May", morn_str]],
-            [self.mask_may_afternoon, ["May", aft_str]],
-            [self.mask_october_morning, ["October", morn_str]],
-            [self.mask_october_afternoon, ["October", aft_str]],
-        ]
-
+        ## All points
         # Create the "nth percentile" point
         percentile_pt = self.utci.quantile(1 - percentile, axis=1)
 
@@ -160,13 +153,42 @@ class UTCI(object):
             },
             "October": {
                 morn_str: utci_reduction(self.utci_openfield, percentile_pt, months=[10],
-                                         hours=[7, 8, 9, 10], threshold=4),
+                                         hours=[7, 8, 9, 10], threshold=threshold),
                 aft_str: utci_reduction(self.utci_openfield, percentile_pt, months=[10],
-                                        hours=[16, 17, 18, 19], threshold=4)
+                                        hours=[16, 17, 18, 19], threshold=threshold)
             }
         }
+        all_pts = [pd.concat([pd.DataFrame.from_dict(d)], keys=['All sample points ({0:0.0%}ile)'.format(percentile)])] #, names=['Firstlevel']
 
-        return pd.DataFrame.from_dict(d)
+        ## Focus points
+
+        if focus_pts is not None:
+            for fp in focus_pts:
+                d = {
+                    "Annual": {
+                        morn_str: utci_reduction(self.utci_openfield, self.utci[fp], months=np.arange(1, 13, 1),
+                                                         hours=[7, 8, 9, 10], threshold=threshold),
+                        aft_str: utci_reduction(self.utci_openfield, self.utci[fp], months=np.arange(1, 13, 1),
+                                                        hours=[16, 17, 18, 19], threshold=threshold)
+                    },
+                    "May": {
+                        morn_str: utci_reduction(self.utci_openfield, self.utci[fp], months=[5],
+                                                         hours=[7, 8, 9, 10], threshold=threshold),
+                        aft_str: utci_reduction(self.utci_openfield, self.utci[fp], months=[5],
+                                                        hours=[16, 17, 18, 19], threshold=threshold)
+                    },
+                    "October": {
+                        morn_str: utci_reduction(self.utci_openfield, self.utci[fp], months=[10],
+                                                         hours=[7, 8, 9, 10], threshold=threshold),
+                        aft_str: utci_reduction(self.utci_openfield, self.utci[fp], months=[10],
+                                                        hours=[16, 17, 18, 19], threshold=threshold)
+                    }
+                }
+                all_pts.append(pd.concat([pd.DataFrame.from_dict(d)], keys=["Sample point #{0:}".format(fp)]))
+
+        df = (pd.concat(all_pts, axis=0) * 100).round(2)
+
+        return df
 
     def plot_context(self, rad_files, pts=False, label_pts=None, highlight_pt=None, tone_color="k", save_path=None,
                      close=True):
@@ -509,6 +531,11 @@ class UTCI(object):
             im = append_images([a, b, c], direction='vertical', bg_color=(255, 255, 255), aligment='center')
             im.save(os.path.join(plot_directory, "pt{0:04d}_collected.png".format(fp)))
 
+        # Create summary table for UTCI reduction frequency in shoulder periods
+        sp = os.path.join(plot_directory, "shoulder_reduction_summary.csv")
+        self.reduction_summary(threshold=4, percentile=0.95, focus_pts=focus_pts).to_csv(sp)
+        print("Summary saved to {}".format(sp))
+
 
 def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=True):
     """ Load the radiance geometry into a dictionary, containing vertex groups and materials names as key
@@ -568,6 +595,14 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ec": "#BEBEBE",
             "ls": ":",
             "name": "Concrete"},
+        "GND_SURROUNDING": {
+            "alpha": 0.0,
+            "fc": "#BEBEBE",
+            "zorder": 1,
+            "lw": 0.0,
+            "ec": "#BEBEBE",
+            "ls": ":",
+            "name": "Underground"},
         "GND_CONCRETELIGHT": {
             "alpha": 1.0,
             "fc": "#DBDBDB",
@@ -584,6 +619,14 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ec": "#8F8F8F",
             "ls": ":",
             "name": "Concrete (Dark)"},
+        "GND_WOOD": {
+            "alpha": 1.0,
+            "fc": "#964B00",
+            "zorder": 1,
+            "lw": 0.25,
+            "ec": "#964B00",
+            "ls": ":",
+            "name": "Wood"},
         "GND_GRASS": {
             "alpha": 1.0,
             "fc": "#005800",
@@ -624,6 +667,14 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ec": "#3FBFBF",
             "ls": ":",
             "name": "Water"},
+        "SHD_WATER": {
+            "alpha": 0.5,
+            "fc": "#3FBFBF",
+            "zorder": 4,
+            "lw": 0.5,
+            "ec": "#3FBFBF",
+            "ls": "-",
+            "name": "Water feature"},
         "SHD_SOLID": {
             "alpha": 0.8,
             "fc": "#C9B4A5",
@@ -648,6 +699,15 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ec": "#007F00",
             "ls": "-",
             "name": "Ghaf (style) tree"
+        },
+        "VEG_PALM": {
+            "alpha": 0.3,
+            "fc": "#8ABAAE",
+            "zorder": 4,
+            "lw": 1.0,
+            "ec": "#8ABAAE",
+            "ls": "-",
+            "name": "Palm (style) tree"
         },
     }
 
