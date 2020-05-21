@@ -651,6 +651,22 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ec": "#FFDEAD",
             "ls": ":",
             "name": "Stone"},
+        "GND_STONELIGHT": {
+            "alpha": 1.0,
+            "fc": "#FFF2DE",
+            "zorder": 4,
+            "lw": 0.75,
+            "ec": "#FFF2DE",
+            "ls": ":",
+            "name": "Stone (Light)"},
+        "GND_STONEDARK": {
+            "alpha": 1.0,
+            "fc": "#CCB491",
+            "zorder": 4,
+            "lw": 0.75,
+            "ec": "#CCB491",
+            "ls": ":",
+            "name": "Stone (Dark)"},
         "GND_SAND": {
             "alpha": 1.0,
             "fc": "#FFF2DE",
@@ -667,6 +683,14 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ec": "#3FBFBF",
             "ls": ":",
             "name": "Water"},
+        "GND_PLAYGROUND": {
+            "alpha": 1.0,
+            "fc": "#BF3F3F",
+            "zorder": 1,
+            "lw": 0.25,
+            "ec": "#BF3F3F",
+            "ls": ":",
+            "name": "Playground"},
         "SHD_WATER": {
             "alpha": 0.5,
             "fc": "#3FBFBF",
@@ -691,6 +715,14 @@ def load_radiance_geometries(rad_files, exclude=["GND_SURROUNDING"], underlay=Tr
             "ec": "#E6CDBC",
             "ls": "-",
             "name": "Fabric shade"},
+        "SHD_POROUS": {
+            "alpha": 0.65,
+            "fc": "#EDE2DA",
+            "zorder": 3,
+            "lw": 1.0,
+            "ec": "#EDE2DA",
+            "ls": "-",
+            "name": "Porous shade"},
         "VEG_GHAF": {
             "alpha": 0.3,
             "fc": "#007F00",
