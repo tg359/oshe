@@ -10,7 +10,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColor
 from matplotlib.patches import Patch, Polygon, Path, PathPatch
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from .helpers import chunk, flatten
+from .helpers import chunk, flatten, ANNUAL_DATETIME
 
 # General housework
 pd.plotting.register_matplotlib_converters()
@@ -26,11 +26,11 @@ class UTCI(object):
 
     def __init__(self, utci_openfield, utci, points):
 
-        self.index = pd.date_range(start="2018-01-01 00:30:00", freq="60T", periods=8760, closed="left")
+        self.index = ANNUAL_DATETIME
         self.utci_openfield = pd.Series(utci_openfield, index=self.index)  # List of hourly annual UTCI values
         self.utci = pd.DataFrame(utci.T, index=self.index)  # array of point/hour values for year
         self.points = pd.DataFrame(points, columns=["x", "y", "z"])  # array of point locations (x, y, z)
-        self.utci_difference = pd.DataFrame((utci_openfield - utci).T, index=self.index)  # openfield/points UTCI diff
+        self.utci_difference = pd.DataFrame((utci_openfield - utci).T, index=self.index)  # openfield.py/points UTCI diff
 
         self.xrange = self.points.x.min() - 5, self.points.x.max() + 5
         self.yrange = self.points.y.min() - 5, self.points.y.max() + 5
@@ -411,6 +411,11 @@ class UTCI(object):
             plt.close()
 
     def generate_plots(self, rad_files, focus_pts, boundary, plot_directory, tone_color="k"):
+
+        for i in focus_pts:
+            if i >= len(self.points):
+                print("Point higher than number of points available")
+                return None
 
         # Open field comfort heatmap
         sp = os.path.join(plot_directory, "openfield_comfortheatmap.png")

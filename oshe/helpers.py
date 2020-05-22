@@ -8,10 +8,20 @@ from ladybug.epw import EPW
 from ladybug.sunpath import Sunpath
 
 
-def sun_altitude(epw_file):
+ANNUAL_DATETIME = pd.date_range(start="2018-01-01 00:30:00", freq="60T", periods=8760, closed="left")
+
+
+def load_weather(epw_file: str):
     epw = EPW(epw_file)
+    df = pd.DataFrame(index=ANNUAL_DATETIME)
+    df["dbt"] = np.roll(np.array(epw.dry_bulb_temperature.values), -1)
+    df["rh"] = np.roll(np.array(epw.relative_humidity.values), -1)
+    df["ws"] = np.roll(np.array(epw.wind_speed.values), -1)
+    df["hir"] = np.roll(np.array(epw.horizontal_infrared_radiation_intensity.values), -1)
+
     sun_path = Sunpath.from_location(epw.location)
-    return np.array([sun_path.calculate_sun_from_hoy(i).altitude for i in range(8760)])
+    df["sun_altitude"] = np.array([sun_path.calculate_sun_from_hoy(i).altitude for i in range(8760)])
+    return df
 
 
 def random_id():
@@ -125,3 +135,47 @@ def chunk(enumerable, n=None):
 def chunks(enumerable, n=None):
     enumerable = np.array(enumerable)
     return [i for i in np.array_split(enumerable, n)]
+
+
+def create_directory(directory: str):
+    pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
+    return pathlib.Path(directory)
+
+
+def find_files(directory: str, endswith: str):
+    return list(pathlib.Path(directory).glob('**/*{}'.format(endswith)))
+
+
+def convert_recipe_to_composite(recipe_json: str, clean: bool = False):
+    # load file
+    json_file = pathlib.Path(recipe_json)
+    d = load_json(json_file)
+
+    # Get output directory
+    outdir = json_file.parents[0]
+
+    # Write sample_pts to file
+    points = pd.DataFrame(d["points"])
+    points.to_csv(outdir / "_sample_points.xyz", index=False, header=False)
+
+    # Write boundary_pts to file
+    boundary = pd.DataFrame(np.array(d["boundary"])[:, :-1])
+    boundary.to_csv(outdir / "_boundary_points.xyz", index=False, header=False)
+
+    # Write gnd reflectivities to file
+    ground_reflectivities = pd.Series(d["ground_reflectivities"])
+    ground_reflectivities.to_csv(outdir / "_ground_reflectivities.rfl", index=False, header=False)
+
+    # Write sky view factor to file
+    sky_view_factors = pd.Series(d["sky_view_factors"]) / 100
+    sky_view_factors.to_csv(outdir / "_sky_view_factors.vf", index=False, header=False)
+
+    # Write surface view factors to file
+    surface_view_factors = pd.DataFrame(d["surface_view_factors"])
+    surface_view_factors.to_csv(outdir / "_surface_view_factors.vf", index=False, header=False)
+
+    # Remove the recipe json
+    if clean:
+        json_file.rename(json_file.parent / json_file.name.replace(".", "_OLD."))
+
+    return None
