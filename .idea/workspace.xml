@@ -3,14 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="e91a66c2-54c7-46d1-9e78-7e15d6f6bede" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/GenerateCase.gh" beforeDir="false" afterPath="$PROJECT_DIR$/GenerateCase.gh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Postprocess_redo.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Postprocess_redo.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oshe/energyplus.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/energyplus.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/openfield.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/openfield.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/plot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oshe/radiance.py" beforeDir="false" afterPath="$PROJECT_DIR$/oshe/radiance.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sandbox.3dm" beforeDir="false" afterPath="$PROJECT_DIR$/sandbox.3dm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sandbox.gh" beforeDir="false" afterPath="$PROJECT_DIR$/sandbox.gh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

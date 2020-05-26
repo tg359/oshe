@@ -1,5 +1,6 @@
 import io
 import pathlib
+import platform
 import subprocess
 import tempfile
 import typing
@@ -43,7 +44,7 @@ def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade =
     eplus_output_path = output_directory / case_name / "ground_surface_temperature"
     eplus_output_path.mkdir(parents=True, exist_ok=True)
     idd_file = pathlib.Path(idd_file)
-    eplus = idd_file.parent / "energyplus.exe"
+    eplus = idd_file.parent / "energyplus"
     idf_file = eplus_output_path / "in.idf"
     csv_file = eplus_output_path / "eplusout.csv"
 
