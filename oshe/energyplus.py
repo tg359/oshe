@@ -14,7 +14,7 @@ from .helpers import flatten
 
 
 def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade = None,
-                   output_directory: str = pathlib.Path(tempfile.gettempdir()), case_name: str = "openfield.py",
+                   output_directory: str = pathlib.Path(tempfile.gettempdir()), case_name: str = "openfield",
                    run: bool = False) -> typing.List[typing.List[float]]:
     """ Calculate the surface temperature of a bit of ground using EnergyPlus
 

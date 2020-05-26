@@ -410,12 +410,7 @@ class UTCI(object):
         if close:
             plt.close()
 
-    def generate_plots(self, rad_files, focus_pts, boundary, plot_directory, tone_color="k"):
-
-        for i in focus_pts:
-            if i >= len(self.points):
-                print("Point higher than number of points available")
-                return None
+    def generate_plots(self, rad_files, boundary, plot_directory, focus_pts=None, tone_color="k"):
 
         # Open field comfort heatmap
         sp = os.path.join(plot_directory, "openfield_comfortheatmap.png")
@@ -450,9 +445,16 @@ class UTCI(object):
                           tone_color=tone_color)
 
         # Context with focus points
-        sp = os.path.join(plot_directory, "context_focuspts.png")
-        self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=focus_pts, save_path=sp, close=True,
-                          tone_color=tone_color)
+        if focus_pts is not None:
+
+            for i in focus_pts:
+                if i >= len(self.points):
+                    print("Point higher than number of points available")
+                    return None
+
+            sp = os.path.join(plot_directory, "context_focuspts.png")
+            self.plot_context(rad_files, pts=False, label_pts=False, highlight_pt=focus_pts, save_path=sp, close=True,
+                              tone_color=tone_color)
 
         # Comfort, improvement and reduction plots
         masks = [

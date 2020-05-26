@@ -17,7 +17,7 @@ def openfield(epw_file: str, idd_file: str, material: str = "CONCRETE", shaded: 
     epw = load_weather(epw_file=epw_file)
 
     # Define ground material
-    gnd_mat = material_dict["CONCRETE"]
+    gnd_mat = material_dict[material]
     ground_zone = Ground(gnd_mat, xy=5, depth=1.5, subsurface_size=5)
 
     # Define VERY LARGE horizontal shade
@@ -50,7 +50,7 @@ def openfield(epw_file: str, idd_file: str, material: str = "CONCRETE", shaded: 
         direct_normal_solar=of_dir_rad.T[0],
         sun_altitude=epw.sun_altitude.values,
         ground_reflectivity=gnd_mat.reflectivity,
-        sky_exposure=0 if shaded else 1)[0]
+        sky_exposure=0 if shaded else 1)[0]  # TODO - replace exposure with TRUE exposure value
 
     # Calculate UTCI
     of_utci = universal_thermal_climate_index(epw.dbt.values, of_mrt, epw.ws.values, epw.rh.values)

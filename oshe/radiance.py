@@ -22,7 +22,7 @@ class _HiddenPrints:
         sys.stdout = self._original_stdout
 
 
-def run_radiance(epw_file: str, ground: Ground, shades: Shade = None, case_name: str = "openfield.py",
+def run_radiance(epw_file: str, ground: Ground, shades: Shade = None, case_name: str = "openfield",
                  output_directory: str = pathlib.Path(tempfile.gettempdir()), run: bool = False):
     """ Run Radiance for a point in an open-field (with or without shade)
 
@@ -65,7 +65,7 @@ def run_radiance(epw_file: str, ground: Ground, shades: Shade = None, case_name:
 
         # Prepare Radiance case for radiation incident on exposed test-point
         sky_matrix = SkyMatrix.from_epw_file(epw_file)
-        analysis_grid = AnalysisGrid.from_points_and_vectors([[0, 0, 1.2]], name="openfield.py")
+        analysis_grid = AnalysisGrid.from_points_and_vectors([[0, 0, 1.2]], name=case_name)
         recipe = GridBased(sky_mtx=sky_matrix, analysis_grids=[analysis_grid], simulation_type=1,
                            hb_objects=context_geometry, reuse_daylight_mtx=True)
 
