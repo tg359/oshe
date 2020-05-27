@@ -7,16 +7,66 @@ import typing
 import warnings
 
 import pandas as pd
+import numpy as np
 from eppy.modeleditor import IDF, IDDAlreadySetError
 from ladybug.epw import EPW
 
 from .geometry import Ground, Shade
-from .helpers import flatten
+from .helpers import flatten, chunk
+
+
+class EsoFile(object):
+    def __init__(self, eso_file: str):
+        self.eso_file = eso_file
+        self.objects = None
+        self.variables = None
+        self.values = None
+        self.reporting_frequency = None
+        self.version = None
+        self.creation_date = None
+
+        self.read_eso()
+        self.df = self.to_frame()
+
+    def read_eso(self):
+
+        self.objects = []
+        self.variables = []
+        self.reporting_frequency = []
+        self.values = []
+
+        with open(self.eso_file, "r") as f:
+            data = [i.strip() for i in f.readlines()]
+
+            # Get metadata
+            self.version = data[0].split(", ")[1].replace("Version ", "")
+            self.creation_date = pd.to_datetime(data[0].split(", ")[2].replace("YMD=", ""))
+
+            # Get reporting frequency and variables
+            for i in data:
+                if "!" in i and "! " not in i:
+                    # Reporting frequency
+                    self.reporting_frequency.append(i.split(" !")[-1])
+                    # Object
+                    self.objects.append(i.split(" !")[0].split(",")[2])
+                    # Variable
+                    self.variables.append(i.split(" !")[0].split(",")[3])
+
+            # Get the values
+            n_vals = len(self.reporting_frequency)
+            split_idx = [n for n, i in enumerate(data) if i == "End of Data Dictionary"][0] + 2
+            self.values = np.array(chunk([i.split(",")[1] for i in data[split_idx:-2] if len(i.split(",")) <= 2],  n=n_vals)).astype(np.float64).T
+
+    def to_frame(self):
+        idx = pd.date_range("2018-01-01 00:30:00", freq="60T", periods=8760)
+        df = pd.DataFrame(data=self.values.T, index=idx,
+                          columns=pd.MultiIndex.from_arrays([self.objects, self.variables]))
+        return df
 
 
 def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade = None,
                    output_directory: str = pathlib.Path(tempfile.gettempdir()), case_name: str = "openfield",
-                   run: bool = False) -> typing.List[typing.List[float]]:
+                   run: bool = False) -> EsoFile:
     """ Calculate the surface temperature of a bit of ground using EnergyPlus
 
     Parameters
@@ -36,7 +86,7 @@ def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade =
 
     Returns
     -------
-        ground_surface_temperature : float
+        EsoFile : Energyplus results object
     """
 
     # Construct case output directory and process variables
@@ -46,7 +96,8 @@ def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade =
     idd_file = pathlib.Path(idd_file)
     eplus = idd_file.parent / "energyplus"
     idf_file = eplus_output_path / "in.idf"
-    csv_file = eplus_output_path / "eplusout.csv"
+    # csv_file = eplus_output_path / "eplusout.csv"
+    eso_file = eplus_output_path / "eplusout.eso"
 
     # Construct EPlus file to run
     try:
@@ -125,14 +176,16 @@ def run_energyplus(epw_file: str, idd_file: str, ground: Ground, shades: Shade =
 
     if run:
         # Run simulation
-        cmd = '"{0:}" -a -r -w "{1:}" -d "{2:}" "{3:}"'.format(eplus.absolute(), epw_file, eplus_output_path, idf_file)
+        cmd = '"{0:}" -a -w "{1:}" -d "{2:}" "{3:}"'.format(eplus.absolute(), epw_file, eplus_output_path, idf_file)
         subprocess.call(cmd, shell=True)
-        print("Ground surface temperature simulation completed")
+        print("Simulation completed")
 
         # Read surface temperature results
-        ground_surface_temperature = load_energyplus_results(csv_file)
+        # ground_surface_temperature = load_energyplus_results(csv_file)
+        # results = EsoFile(eso_file=eso_file)
+        # ground_surface_temperature = results.values
 
-        return ground_surface_temperature
+        return EsoFile(eso_file=eso_file)
     else:
         return idf_file
 
@@ -157,3 +210,6 @@ def load_energyplus_results(file_path: str):
 def view_factor_calculation():
     # TODO - Add view factor calculation method from sensor point location to sky, ground and shade objects
     return None
+
+
+

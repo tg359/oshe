@@ -11,8 +11,6 @@ import pandas as pd
 
 def openfield(epw_file: str, idd_file: str, material: str = "CONCRETE", shaded: bool = False):
 
-    df = pd.DataFrame(index=ANNUAL_DATETIME)
-
     # Load weatherfile
     epw = load_weather(epw_file=epw_file)
 
@@ -22,10 +20,20 @@ def openfield(epw_file: str, idd_file: str, material: str = "CONCRETE", shaded: 
 
     # Define VERY LARGE horizontal shade
     if shaded:
+        # Single shade
         shades = [
-            Shade(vertices=[[-1000, -1000, 3], [-1000, 1000, 0], [1000, 1000, 0], [1000, -1000, 3]])
+            Shade(vertices=[[-20, -20, 3], [-20, 20, 0], [20, 20, 0], [20, -20, 3]])
         ]
-        # Box shade - currently not utilised
+        
+        # Pyramid shade
+        # shades = [
+        #     Shade(vertices=[[2.5, -2.5, 0], [2.5, 2.5, 0], [0, 0, 3]]),
+        #     Shade(vertices=[[2.5, 2.5, 0], [-2.5, 2.5, 0], [0, 0, 3]]),
+        #     Shade(vertices=[[-2.5, 2.5, 0], [-2.5, -2.5, 0], [0, 0, 3]]),
+        #     Shade(vertices=[[-2.5, -2.5, 0], [2.5, -2.5, 0], [0, 0, 3]])
+        # ]
+        
+        # Box shade
         # shades = [
         #     Shade(vertices=[[5, 5, 3], [5, 5, 0], [5, -5, 0], [5, -5, 3]]),
         #     Shade(vertices=[[5, -5, 3], [5, -5, 0], [-5, -5, 0], [-5, -5, 3]]),
@@ -37,15 +45,15 @@ def openfield(epw_file: str, idd_file: str, material: str = "CONCRETE", shaded: 
         shades = None
 
     # Calculate ground surface temperature
-    of_srf_temp = run_energyplus(epw_file, idd_file, ground=ground_zone, shades=shades, run=True)
+    of_srf_temp = run_energyplus(epw_file, idd_file, ground=ground_zone, shades=shades, case_name="shaded" if shaded else "unshaded", run=True).values
 
     # Calculate incident solar direct and diffuse radiation
-    of_dir_rad, of_dif_rad = run_radiance(epw_file, ground=ground_zone, shades=None, run=True)
+    of_dir_rad, of_dif_rad = run_radiance(epw_file, ground=ground_zone, shades=shades, case_name="shaded" if shaded else "unshaded", run=True)
 
     # Calculate MRT
     of_mrt = mean_radiant_temperature(
         surrounding_surfaces_temperature=of_srf_temp[0],
-        horizontal_infrared_radiation_intensity=epw.hir.values,
+        horizontal_infrared_radiation_intensity=0 if shaded else epw.hir.values,
         diffuse_horizontal_solar=of_dif_rad.T[0],
         direct_normal_solar=of_dir_rad.T[0],
         sun_altitude=epw.sun_altitude.values,
@@ -57,7 +65,10 @@ def openfield(epw_file: str, idd_file: str, material: str = "CONCRETE", shaded: 
 
     # Join important results
     d = {
+        "hir": epw.hir.values * 0 if shaded else epw.hir.values * 1,
         "dbt": epw.dbt.values,
+        "dir": of_dir_rad.T[0],
+        "dif": of_dif_rad.T[0],
         "gnd_srftemp": of_srf_temp[0],
         "mrt": of_mrt,
         "utci": of_utci
