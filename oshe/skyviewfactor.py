@@ -37,12 +37,10 @@ def sky_view_factor(pts_file: str, rad_files: List[str], case_name: str = "svf",
 
     # Create the octree file
     octree_cmd = "oconv {0:} {1:} > {2:}".format(str(sky_file), " ".join(rad_files), str(oct_file))
-    # print(octree_cmd)
     subprocess.call(octree_cmd, shell=True)
 
     # Calculate the sky view factor for each point in the context geometry
     svf_cmd = "type {0:} | rtrace -h -ab 1 -I {1:} | rcalc -e \"SVF=$1;$1=SVF\" > {2:}".format(str(pts_file), str(oct_file), str(skyviewfactor_file))
-    # print(svf_cmd)
     subprocess.call(svf_cmd, shell=True)
 
     # Load svfs into array

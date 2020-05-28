@@ -6,18 +6,54 @@ import numpy as np
 import pandas as pd
 from ladybug.epw import EPW
 from ladybug.sunpath import Sunpath
+from ladybug.psychrometrics import wet_bulb_from_db_rh, humid_ratio_from_db_rh, enthalpy_from_db_hr
 
 
 ANNUAL_DATETIME = pd.date_range(start="2018-01-01 00:30:00", freq="60T", periods=8760, closed="left")
 
 
-def load_weather(epw_file: str):
+def load_weather(epw_file: str, index: pd.DatetimeIndex = ANNUAL_DATETIME):
     epw = EPW(epw_file)
-    df = pd.DataFrame(index=ANNUAL_DATETIME)
+    df = pd.DataFrame(index=index)
+
     df["dbt"] = np.roll(np.array(epw.dry_bulb_temperature.values), -1)
     df["rh"] = np.roll(np.array(epw.relative_humidity.values), -1)
     df["ws"] = np.roll(np.array(epw.wind_speed.values), -1)
     df["hir"] = np.roll(np.array(epw.horizontal_infrared_radiation_intensity.values), -1)
+
+    df["dry_bulb_temperature"] = np.roll(np.array(epw.dry_bulb_temperature.values), -1)
+    df["dew_point_temperature"] = np.roll(np.array(epw.dew_point_temperature.values), -1)
+    df["relative_humidity"] = np.roll(np.array(epw.relative_humidity.values), -1)
+    df["atmospheric_station_pressure"] = np.roll(np.array(epw.atmospheric_station_pressure.values), -1)
+    df["extraterrestrial_horizontal_radiation"] = np.roll(np.array(epw.extraterrestrial_horizontal_radiation.values), -1)
+    df["extraterrestrial_direct_normal_radiation"] = np.roll(np.array(epw.extraterrestrial_direct_normal_radiation.values), -1)
+    df["horizontal_infrared_radiation_intensity"] = np.roll(np.array(epw.horizontal_infrared_radiation_intensity.values), -1)
+    df["global_horizontal_radiation"] = np.roll(np.array(epw.global_horizontal_radiation.values), -1)
+    df["direct_normal_radiation"] = np.roll(np.array(epw.direct_normal_radiation.values), -1)
+    df["diffuse_horizontal_radiation"] = np.roll(np.array(epw.diffuse_horizontal_radiation.values), -1)
+    df["global_horizontal_illuminance"] = np.roll(np.array(epw.global_horizontal_illuminance.values), -1)
+    df["direct_normal_illuminance"] = np.roll(np.array(epw.direct_normal_illuminance.values), -1)
+    df["diffuse_horizontal_illuminance"] = np.roll(np.array(epw.diffuse_horizontal_illuminance.values), -1)
+    df["zenith_luminance"] = np.roll(np.array(epw.zenith_luminance.values), -1)
+    df["wind_direction"] = np.roll(np.array(epw.wind_direction.values), -1)
+    df["wind_speed"] = np.roll(np.array(epw.wind_speed.values), -1)
+    df["total_sky_cover"] = np.roll(np.array(epw.total_sky_cover.values), -1)
+    df["opaque_sky_cover"] = np.roll(np.array(epw.opaque_sky_cover.values), -1)
+    df["visibility"] = np.roll(np.array(epw.visibility.values), -1)
+    df["ceiling_height"] = np.roll(np.array(epw.ceiling_height.values), -1)
+    df["present_weather_observation"] = np.roll(np.array(epw.present_weather_observation.values), -1)
+    df["present_weather_codes"] = np.roll(np.array(epw.present_weather_codes.values), -1)
+    df["precipitable_water"] = np.roll(np.array(epw.precipitable_water.values), -1)
+    df["aerosol_optical_depth"] = np.roll(np.array(epw.aerosol_optical_depth.values), -1)
+    df["snow_depth"] = np.roll(np.array(epw.snow_depth.values), -1)
+    df["days_since_last_snowfall"] = np.roll(np.array(epw.days_since_last_snowfall.values), -1)
+    df["albedo"] = np.roll(np.array(epw.albedo.values), -1)
+    df["liquid_precipitation_depth"] = np.roll(np.array(epw.liquid_precipitation_depth.values), -1)
+    df["liquid_precipitation_quantity"] = np.roll(np.array(epw.liquid_precipitation_quantity.values), -1)
+
+    df["wet_bulb_temperature"] = np.vectorize(wet_bulb_from_db_rh)(df.dry_bulb_temperature.values, df.relative_humidity.values, df.atmospheric_station_pressure.values)
+    df["humidity_ratio"] = np.vectorize(humid_ratio_from_db_rh)(df.dry_bulb_temperature.values, df.relative_humidity.values, df.atmospheric_station_pressure.values)
+    df["enthalpy"] = np.vectorize(enthalpy_from_db_hr)(df.dry_bulb_temperature.values, df.humidity_ratio.values)
 
     sun_path = Sunpath.from_location(epw.location)
     df["sun_altitude"] = np.array([sun_path.calculate_sun_from_hoy(i).altitude for i in range(8760)])
