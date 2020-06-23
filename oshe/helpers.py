@@ -11,6 +11,23 @@ from ladybug.psychrometrics import wet_bulb_from_db_rh, humid_ratio_from_db_rh, 
 
 ANNUAL_DATETIME = pd.date_range(start="2018-01-01 00:30:00", freq="60T", periods=8760, closed="left")
 
+MASKS = {
+    "Daily": ((ANNUAL_DATETIME.hour >= 0) & (ANNUAL_DATETIME.hour <= 24)),
+    "Morning": ((ANNUAL_DATETIME.hour >= 5) & (ANNUAL_DATETIME.hour <= 10)),
+    "Midday": ((ANNUAL_DATETIME.hour >= 11) & (ANNUAL_DATETIME.hour <= 13)),
+    "Afternoon": ((ANNUAL_DATETIME.hour >= 14) & (ANNUAL_DATETIME.hour <= 18)),
+    "Evening": ((ANNUAL_DATETIME.hour >= 19) & (ANNUAL_DATETIME.hour <= 22)),
+    "Night": ((ANNUAL_DATETIME.hour >= 23) | (ANNUAL_DATETIME.hour <= 4)),
+    "MorningShoulder": ((ANNUAL_DATETIME.hour >= 7) & (ANNUAL_DATETIME.hour <= 10)),
+    "AfternoonShoulder": ((ANNUAL_DATETIME.hour >= 16) & (ANNUAL_DATETIME.hour <= 19)),
+
+    "Annual": ((ANNUAL_DATETIME.month >= 1) & (ANNUAL_DATETIME.month <= 12)),
+    "Spring": ((ANNUAL_DATETIME.month >= 3) & (ANNUAL_DATETIME.month <= 5)),
+    "Summer": ((ANNUAL_DATETIME.month >= 6) & (ANNUAL_DATETIME.month <= 8)),
+    "Autumn": ((ANNUAL_DATETIME.month >= 9) & (ANNUAL_DATETIME.month <= 11)),
+    "Winter": ((ANNUAL_DATETIME.month <= 2) | (ANNUAL_DATETIME.month >= 12)),
+    "Shoulder": ((ANNUAL_DATETIME.month == 3) | (ANNUAL_DATETIME.month == 10)),
+}
 
 def load_weather(epw_file: str, index: pd.DatetimeIndex = ANNUAL_DATETIME):
     epw = EPW(epw_file)
@@ -57,6 +74,10 @@ def load_weather(epw_file: str, index: pd.DatetimeIndex = ANNUAL_DATETIME):
 
     sun_path = Sunpath.from_location(epw.location)
     df["sun_altitude"] = np.array([sun_path.calculate_sun_from_hoy(i).altitude for i in range(8760)])
+
+    df["city"] = epw.location.city
+    df["country"] = epw.location.country
+    df["station_id"] = epw.location.station_id
     return df
 
 

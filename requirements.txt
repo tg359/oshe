@@ -8,3 +8,4 @@ numpy==1.18.4
 pandas==1.0.3
 Pillow==7.1.2
 PsychroLib==2.5.0
+windrose==1.6.7

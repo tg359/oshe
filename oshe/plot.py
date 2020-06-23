@@ -7,10 +7,15 @@ from PIL import Image
 from matplotlib import dates, ticker
 from matplotlib.collections import PatchCollection
 from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
-from matplotlib.patches import Patch, Polygon, Path, PathPatch
+from matplotlib.patches import Patch, Polygon, Path, PathPatch, Rectangle
+from matplotlib.ticker import MaxNLocator, PercentFormatter
+import matplotlib.dates as mdates
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from windrose import WindroseAxes
+from matplotlib import cm
+import warnings
 
-from .helpers import chunk, flatten, ANNUAL_DATETIME
+from .helpers import chunk, flatten, ANNUAL_DATETIME, MASKS
 
 # General housework
 pd.plotting.register_matplotlib_converters()
@@ -1062,6 +1067,7 @@ def get_aggregate_day(utci_values, lower=9, upper=28, months=[1, 2, 3, 4, 5, 6, 
 
     return temp
 
+
 def utci_reduction(utci_a, utci_b, months=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], hours=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], threshold=4, prnt=False):
     months = np.array(months)
     hours = np.array(hours) - 1  # Needed to add -1 here to fix the indexing issue for hour of year
@@ -1072,3 +1078,473 @@ def utci_reduction(utci_a, utci_b, months=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
     if prnt:
         print("Months: [{0:}]\nHours: [{1:}]\nThreshold: {2:}\n% UTCI reduction: {3:0.2%}".format(", ".join(months.astype(str)), ", ".join(hours.astype(str)), threshold, time_achieved))
     return time_achieved
+
+
+########################################################
+
+def normalise_rgb(rgb_color):
+    if sum([i < 1 for i in rgb_color]) > 1:
+        warnings.warn("\n    Input color may be interpreted incorrectly as the composite RGB values are all less than 1. It's probably worth checking it's correct!", Warning)
+        interpreted_color = np.interp(np.array(rgb_color), [0, 1], [0, 255]).tolist()
+    else:
+        interpreted_color = rgb_color
+    return interpreted_color
+
+
+def rgb_to_hex(rgb_list):
+    """
+    Convert an RGB tuple/list to its hexadecimal equivalent
+    Parameters
+    ----------
+    rgb_list : ndarray
+        1D array containing RGB values in either 0-255 or 0-1 format
+    Returns
+    -------
+    hex_color : str
+        Hexadecimal representation of the input RGB color
+    """
+    a, b, c = normalise_rgb(rgb_list)
+    return '#%02x%02x%02x' % (max(min([int(a), 255]), 0), max(min([int(b), 255]), 0), max(min([int(c), 255]), 0))
+
+
+def renamer(original):
+    rename = {
+        "dry_bulb_temperature": "Dry-Bulb Temperature (°C)",
+        "dew_point_temperature": "Dew-Point Temperature (°C)",
+        "relative_humidity": "Relative Humidity (%)",
+        "atmospheric_station_pressure": "Atmospheric Station Pressure (Pa)",
+        "extraterrestrial_horizontal_radiation": "Extraterrestrial Horizontal Radiation (W/m²)",
+        "extraterrestrial_direct_normal_radiation": "Extraterrestrial Direct Normal Radiation (W/m²)",
+        "horizontal_infrared_radiation_intensity": "Horizontal Infrared Radiation Intensity (W/m²)",
+        "global_horizontal_radiation": "Global Horizontal Radiation (W/m²)",
+        "direct_normal_radiation": "Direct Normal Radiation (W/m²)",
+        "diffuse_horizontal_radiation": "Diffuse Horizontal Radiation (W/m²)",
+        "global_horizontal_illuminance": "Global Horizontal Illuminance (lux)",
+        "direct_normal_illuminance": "Direct Normal Illuminance (lux)",
+        "diffuse_horizontal_illuminance": "Diffuse Horizontal Illuminance (lux)",
+        "zenith_luminance": "Zenith Luminance (Cd/m²)",
+        "wind_direction": "Wind Direction (degrees)",
+        "wind_speed": "Wind Speed (m/s)",
+        "total_sky_cover": "Total Sky Cover (tenths)",
+        "opaque_sky_cover": "Opaque Sky Cover (tenths)",
+        "visibility": "Visibility (km)",
+        "ceiling_height": "Ceiling Height (m)",
+        "present_weather_observation": "Present Weather Observation",
+        "present_weather_codes": "Present Weather Codes",
+        "precipitable_water": "Precipitable Water (mm)",
+        "aerosol_optical_depth": "Aerosol Optical Depth (thousandths)",
+        "snow_depth": "Snow Depth (cm)",
+        "days_since_last_snowfall": "Days Since Last Snowfall",
+        "albedo": "Albedo",
+        "liquid_precipitation_depth": "Liquid Precipitation Depth (mm)",
+        "liquid_precipitation_quantity": "Liquid Precipitation Quantity (hr)",
+        "solar_apparent_zenith_angle": "Solar Apparent Zenith Angle (degrees)",
+        "solar_zenith_angle": "Solar Zenith Angle (degrees)",
+        "solar_apparent_elevation_angle": "Solar Apparent Elevation Angle (degrees)",
+        "solar_elevation_angle": "Solar Elevation Angle (degrees)",
+        "solar_azimuth_angle": "Solar Azimuth Angle (degrees)",
+        "solar_equation_of_time": "Solar Equation of Time (minutes)",
+        "humidity_ratio": "Humidity Ratio",
+        "wet_bulb_temperature": "Wet Bulb Temperature (°C)",
+        "partial_vapour_pressure_moist_air": "Partial Vapour Pressure of Moist air (Pa)",
+        "enthalpy": "Enthalpy (J/kg)",
+        "specific_volume_moist_air": "Specific Volume of Moist Air (m³/kg)",
+        "degree_of_saturation": "Degree of Saturation",
+    }
+    return rename[original]
+
+
+def diurnal(self, moisture="rh", tone_color="k", save_path=None, close=True):
+
+    grouping = [self.index.month, self.index.hour]
+
+    # Group dry-bulb temperatures
+    dbt_grouping = self.dry_bulb_temperature.groupby(grouping)
+    dbt_min = dbt_grouping.min().reset_index(drop=True)
+    dbt_mean = dbt_grouping.mean().reset_index(drop=True)
+    dbt_max = dbt_grouping.max().reset_index(drop=True)
+    dbt_name = renamer(self.dry_bulb_temperature.name)
+
+    # Group relative humidity / dew-point temperature
+    if moisture == "dpt":
+        moisture_grouping = self.dew_point_temperature.groupby(grouping)
+        moisture_name = renamer(self.dew_point_temperature.name)
+    elif moisture == "rh":
+        moisture_grouping = self.relative_humidity.groupby(grouping)
+        moisture_name = renamer(self.relative_humidity.name)
+    elif moisture == "wbt":
+        moisture_grouping = self.wet_bulb_temperature.groupby(grouping)
+        moisture_name = renamer(self.wet_bulb_temperature.name)
+
+    moisture_min = moisture_grouping.min().reset_index(drop=True)
+    moisture_mean = moisture_grouping.mean().reset_index(drop=True)
+    moisture_max = moisture_grouping.max().reset_index(drop=True)
+
+    # Group solar radiation
+    global_radiation_mean = self.global_horizontal_radiation.groupby(grouping).mean().reset_index(drop=True)
+    glob_rad_name = renamer(self.global_horizontal_radiation.name)
+    diffuse_radiation_mean = self.diffuse_horizontal_radiation.groupby(grouping).mean().reset_index(drop=True)
+    dif_rad_name = renamer(self.diffuse_horizontal_radiation.name)
+    direct_radiation_mean = self.direct_normal_radiation.groupby(grouping).mean().reset_index(drop=True)
+    dir_rad_name = renamer(self.direct_normal_radiation.name)
+
+    # Instantiate plot
+    fig, ax = plt.subplots(3, 1, figsize=(15, 8))
+
+    # Plot DBT
+    [ax[0].plot(dbt_mean.iloc[i:i + 24], color='#BC204B', lw=2, label='Average') for i in np.arange(0, 288)[::24]]
+    [ax[0].fill_between(np.arange(i, i + 24), dbt_min.iloc[i:i + 24], dbt_max.iloc[i:i + 24], color='#BC204B',
+                        alpha=0.2, label='Range') for i in np.arange(0, 288)[::24]]
+    ax[0].set_ylabel(dbt_name, labelpad=2, color=tone_color)
+    ax[0].yaxis.set_major_locator(MaxNLocator(7))
+
+    # Plot DPT / RH
+    [ax[1].plot(moisture_mean.iloc[i:i + 24], color='#00617F', lw=2, label='Average') for i in np.arange(0, 288)[::24]]
+    [ax[1].fill_between(np.arange(i, i + 24), moisture_min.iloc[i:i + 24], moisture_max.iloc[i:i + 24], color='#00617F',
+                        alpha=0.2, label='Range') for i in np.arange(0, 288)[::24]]
+    ax[1].set_ylabel(moisture_name, labelpad=2, color=tone_color)
+    ax[1].yaxis.set_major_locator(MaxNLocator(7))
+    if moisture == "rh":
+        ax[1].set_ylim([0, 100])
+
+    # Plot solar
+    [ax[2].plot(direct_radiation_mean.iloc[i:i + 24], color='#FF8F1C', lw=1.5, ls='--', label=dir_rad_name) for
+     i in
+     np.arange(0, 288)[::24]]
+    [ax[2].plot(diffuse_radiation_mean.iloc[i:i + 24], color='#FF8F1C', lw=1.5, ls=':', label=dif_rad_name) for i
+     in np.arange(0, 288)[::24]]
+    [ax[2].plot(global_radiation_mean.iloc[i:i + 24], color='#FF8F1C', lw=2, ls='-', label=glob_rad_name)
+     for
+     i in np.arange(0, 288)[::24]]
+    ax[2].set_ylabel('Solar Radiation (W/m²)', labelpad=2, color=tone_color)
+    ax[2].yaxis.set_major_locator(MaxNLocator(7))
+
+    # Format plot area
+    [[i.spines[spine].set_visible(False) for spine in ['top', 'right']] for i in ax]
+    [[i.spines[j].set_color(tone_color) for i in ax] for j in ['bottom', 'left']]
+    [i.xaxis.set_ticks(np.arange(0, 288, 24)) for i in ax]
+    [i.set_xlim([0, 287]) for i in ax]
+    [plt.setp(i.get_yticklabels(), color=tone_color) for i in ax]
+    [i.set_xticklabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                       ha='left', color=tone_color) for i in ax]
+    [i.get_xaxis().set_ticklabels([]) for i in [ax[0], ax[1]]]
+    [i.grid(b=True, which='major', axis='both', c=tone_color, ls='--', lw=1, alpha=0.3) for i in ax]
+    [i.tick_params(length=0) for i in ax]
+
+    ax[2].set_ylim([0, ax[2].get_ylim()[1]])
+
+    # Legend
+    handles, labels = ax[2].get_legend_handles_labels()
+    lgd = ax[2].legend(bbox_to_anchor=(0.5, -0.2), loc=8, ncol=3, borderaxespad=0., frameon=False,
+                       handles=[handles[0], handles[12], handles[24]], labels=[labels[0], labels[12], labels[24]])
+    lgd.get_frame().set_facecolor((1, 1, 1, 0))
+    [plt.setp(text, color=tone_color) for text in lgd.get_texts()]
+
+    # Add a title
+    title = plt.suptitle(
+        "Monthly average diurnal profile\n{0:} - {1:} - {2:}".format(self.city.values[0], self.country.values[0], self.station_id.values[0]),
+        color=tone_color, y=1.025)
+
+    # Tidy plot
+    plt.tight_layout()
+
+    # Save figure
+    if save_path is not None:
+        fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False)
+        print("Diurnal plot saved to {}".format(save_path))
+
+    if close:
+        plt.close()
+
+
+def heatmap_generic(series, cmap='Greys', tone_color="k", vrange=None, save_path=None, close=True, invert_y=False):
+
+    # Instantiate figure
+    fig, ax = plt.subplots(1, 1, figsize=(15, 5))
+
+    # Load data and remove timezone from index
+    nombre = series.name
+    series = series.to_frame()
+
+    # Reshape data into time/day matrix
+    ll = series.pivot_table(columns=series.index.date, index=series.index.time).values[::-1]
+
+    # Plot data
+    heatmap = ax.imshow(
+        ll,
+        extent=[mdates.date2num(series.index.min()), mdates.date2num(series.index.max()), 726449, 726450],
+        aspect='auto',
+        cmap=cmap,
+        interpolation='none',
+        vmin=vrange[0] if vrange is not None else None,
+        vmax=vrange[-1] if vrange is not None else None,
+    )
+
+    # Axis formatting
+    ax.xaxis_date()
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+    ax.yaxis_date()
+    ax.yaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    if invert_y:
+        ax.invert_yaxis()
+    ax.tick_params(labelleft=True, labelright=True, labelbottom=True)
+    plt.setp(ax.get_xticklabels(), ha='left', color=tone_color)
+    plt.setp(ax.get_yticklabels(), color=tone_color)
+
+    # Spine formatting
+    [ax.spines[spine].set_visible(False) for spine in ['top', 'bottom', 'left', 'right']]
+
+    # Grid formatting
+    ax.grid(b=True, which='major', color='white', linestyle=':', alpha=1)
+
+    # Colorbar formatting
+    cb = fig.colorbar(heatmap, orientation='horizontal', drawedges=False, fraction=0.05, aspect=100, pad=0.075)
+    plt.setp(plt.getp(cb.ax.axes, 'xticklabels'), color=tone_color)
+    cb.outline.set_visible(False)
+
+    # Add title if provided
+    title = "{0:}".format(renamer(nombre))
+    plt.title(title, color=tone_color, y=1.01)
+
+    # Tidy plot
+    plt.tight_layout()
+
+    # Save figure
+    if save_path is not None:
+        fig.savefig(save_path, bbox_inches="tight", dpi=300, transparent=False)
+        print("Heatmap plot saved to {}".format(save_path))
+
+    if close:
+        plt.close()
+
+
+def windrose(self, season_period="Annual", day_period="Daily", n_sector=16, cmap=None, tone_color="k", save_path=None, trns=False, close=True):
+
+    # Describe a set of masks to remove unwanted hours of the year
+    speed_mask = (self.wind_speed != 0)
+    direction_mask = (self.wind_direction != 0)
+    mask = np.array([MASKS[day_period], MASKS[season_period], speed_mask, direction_mask]).all(axis=0)
+
+    plt.hist([0, 1]);
+    plt.close()
+
+    fig = plt.figure(figsize=(6, 6))
+    ax = WindroseAxes.from_ax()
+    ax.bar(self.wind_direction[mask], self.wind_speed[mask], normed=True,
+           bins=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], opening=0.95, edgecolor='White',
+           lw=0.1, nsector=n_sector,
+           cmap=cm.get_cmap('GnBu') if cmap is None else cm.get_cmap(cmap))
+
+    lgd = ax.legend(bbox_to_anchor=(1.1, 0.5), loc='center left', frameon=False, title="m/s")
+    lgd.get_frame().set_facecolor((1, 1, 1, 0))
+    [plt.setp(text, color=tone_color) for text in lgd.get_texts()]
+    plt.setp(lgd.get_title(), color=tone_color)
+
+    for i, leg in enumerate(lgd.get_texts()):
+        b = leg.get_text().replace('[', '').replace(')', '').split(' : ')
+        lgd.get_texts()[i].set_text(b[0] + ' to ' + b[1])
+
+    ax.grid(linestyle=':', color=tone_color, alpha=0.5)
+    ax.spines['polar'].set_visible(False)
+    plt.setp(ax.get_xticklabels(), color=tone_color)
+    plt.setp(ax.get_yticklabels(), color=tone_color)
+    ax.set_title("{} - {}\n{} - {} - {}".format(season_period, day_period, self.city.values[0], self.country.values[0], self.station_id.values[0]), y=1.06, color=tone_color, loc="center", va="bottom", ha="center", fontsize="medium")
+
+    plt.tight_layout()
+
+    # Save figure
+    if save_path is not None:
+        plt.savefig(save_path, bbox_extra_artists=(lgd,), bbox_inches='tight', dpi=300, transparent=trns)
+        print("Windrose saved to {}".format(save_path))
+
+    if close:
+        plt.close()
+
+    return fig
+
+
+def wind_frequency(self, season_period="Annual", day_period="Daily", tone_color="k", save_path=None, close=True):
+
+    # Describe a set of masks to remove unwanted hours of the year
+    speed_mask = (self.wind_speed != 0)
+    direction_mask = (self.wind_direction != 0)
+    mask = np.array([MASKS[day_period], MASKS[season_period], speed_mask, direction_mask]).all(
+        axis=0)
+
+    a = self.wind_speed[mask]
+
+    bins = np.arange(0, 16, 1)
+
+    fig, ax = plt.subplots(1, 1, figsize=(10, 4))
+    a.plot(kind="hist", density=True, bins=bins, color=rgb_to_hex([28, 54, 96]), zorder=5)
+    ax.xaxis.set_major_locator(plt.MaxNLocator(18))
+    ax.set_xlabel('Wind speed (m/s)', color=tone_color)
+    ax.tick_params(axis='both', colors=tone_color)
+    ax.set_ylabel('Frequency', color=tone_color)
+    ax.tick_params(axis='both', which='major')
+
+    ax.grid(b=True, which='major', color=tone_color, linestyle=':', alpha=0.5, zorder=3)
+    [ax.spines[spine].set_visible(False) for spine in ['top', 'right']]
+    [ax.spines[j].set_color(tone_color) for j in ['bottom', 'left']]
+    ti = plt.title(
+        "{2:} - {3:}\n{0:} - {1:} - {4:}".format(self.city.values[0], self.country.values[0], season_period, day_period, self.station_id.values[0]),
+        color=tone_color)
+    ax.set_xlim([0, 16])
+
+    ax.yaxis.set_major_formatter(PercentFormatter(1))
+    bars = [rect for rect in ax.get_children() if isinstance(rect, Rectangle)]
+    for bar in bars[:-1]:
+        ax.text(bar.xy[0] + bar.get_width() / 2, bar.get_height() + 0.005, "{:0.0%}".format(bar.get_height()),
+                ha="center", va="bottom", color=tone_color)
+
+    plt.tight_layout()
+
+    # Save figure
+    if save_path is not None:
+        plt.savefig(save_path, dpi=300, transparent=False)
+        print("Wind frequency histogram saved to {}".format(save_path))
+
+    if close:
+        plt.close()
+
+
+def utci_heatmap_detailed_generic(series, tone_color="k", title=None, invert_y=False, cmap=None, save_path=None, close=True):
+    utci_cmap = ListedColormap(
+        ['#0D104B', '#262972', '#3452A4', '#3C65AF', '#37BCED', '#2EB349', '#F38322', '#C31F25', '#7F1416', '#580002'])
+    utci_cmap_bounds = [-100, -40, -27, -13, 0, 9, 26, 32, 38, 46, 100]
+    utci_cmap_norm = BoundaryNorm(utci_cmap_bounds, utci_cmap.N)
+
+    sname = series.name
+    series = series.to_frame()
+
+    if cmap is None:
+        cmap = utci_cmap
+    else:
+        try:
+            cmap = cm.get_cmap(cmap)
+        except Exception as e:
+            print(e)
+            cmap = cmap
+
+    fig = plt.figure(figsize=(15, 6), constrained_layout=True)
+    spec = fig.add_gridspec(ncols=1, nrows=2, width_ratios=[1], height_ratios=[2, 1], hspace=0.1)
+
+    hmap = fig.add_subplot(spec[0, 0])
+    hbar = fig.add_subplot(spec[1, 0])
+
+    bounds = np.arange(-41, 48, 1)
+    norm = BoundaryNorm(bounds, cmap.N)
+
+    # Plot heatmap
+    heatmap = hmap.imshow(pd.pivot_table(series, index=series.index.time, columns=series.index.date,
+                                         values=sname).values[::-1], norm=utci_cmap_norm,
+                          extent=[dates.date2num(series.index.min()), dates.date2num(series.index.max()), 726449,
+                                  726450],
+                          aspect='auto', cmap=cmap, interpolation='none', vmin=-40, vmax=46)
+    hmap.xaxis_date()
+    hmap.xaxis.set_major_formatter(dates.DateFormatter('%b'))
+    hmap.yaxis_date()
+    hmap.yaxis.set_major_formatter(dates.DateFormatter('%H:%M'))
+    if invert_y:
+        hmap.invert_yaxis()
+    hmap.tick_params(labelleft=True, labelright=True, labelbottom=True)
+    plt.setp(hmap.get_xticklabels(), ha='left', color=tone_color)
+    plt.setp(hmap.get_yticklabels(), color=tone_color)
+    for spine in ['top', 'bottom', 'left', 'right']:
+        hmap.spines[spine].set_visible(False)
+        hmap.spines[spine].set_color(tone_color)
+    hmap.grid(b=True, which='major', color=tone_color, linestyle=':', alpha=0.5)
+
+    # Add colorbar legend and text descriptors for comfort bands
+    cb = fig.colorbar(heatmap, cmap=cmap, norm=norm, boundaries=bounds,
+                      orientation='horizontal', drawedges=False, fraction=0.01, aspect=50,
+                      pad=-0.0, extend='both', ticks=[-40, -27, -13, 0, 9, 26, 32, 38, 46])
+    plt.setp(plt.getp(cb.ax.axes, 'xticklabels'), color=tone_color)
+    cb.outline.set_visible(False)
+    # cb.outline.set_color("#555555")
+    y_move = -0.4
+    hbar.text(0, y_move, 'Extreme\ncold stress', ha='center', va='center', transform=hbar.transAxes, color=tone_color,
+              fontsize='small')
+    hbar.text(np.interp(-27 + (-40 - -27) / 2, [-44.319, 50.319], [0, 1]), y_move, 'Very strong\ncold stress',
+              ha='center', va='center', transform=hbar.transAxes, color=tone_color, fontsize='small')
+    hbar.text(np.interp(-13 + (-27 - -13) / 2, [-44.319, 50.319], [0, 1]), y_move, 'Strong\ncold stress', ha='center',
+              va='center', transform=hbar.transAxes, color=tone_color, fontsize='small')
+    hbar.text(np.interp(0 + (-13 - 0) / 2, [-44.319, 50.319], [0, 1]), y_move, 'Moderate\ncold stress', ha='center',
+              va='center', transform=hbar.transAxes, color=tone_color, fontsize='small')
+    hbar.text(np.interp(0 + (9 - 0) / 2, [-44.319, 50.319], [0, 1]), y_move, 'Slight\ncold stress', ha='center',
+              va='center', transform=hbar.transAxes, color=tone_color, fontsize='small')
+    hbar.text(np.interp(9 + (26 - 9) / 2, [-44.319, 50.319], [0, 1]), y_move, 'No thermal stress', ha='center',
+              va='center', transform=hbar.transAxes, color=tone_color, fontsize='small')
+    hbar.text(np.interp(26 + (32 - 26) / 2, [-44.319, 50.319], [0, 1]), y_move, 'Moderate\nheat stress', ha='center',
+              va='center', transform=hbar.transAxes, color=tone_color, fontsize='small')
+    hbar.text(np.interp(32 + (38 - 32) / 2, [-44.319, 50.319], [0, 1]), y_move, 'Strong\nheat stress', ha='center',
+              va='center', transform=hbar.transAxes, color=tone_color, fontsize='small')
+    hbar.text(np.interp(38 + (46 - 38) / 2, [-44.319, 50.319], [0, 1]), y_move, 'Very strong\nheat stress', ha='center',
+              va='center', transform=hbar.transAxes, color=tone_color, fontsize='small')
+    hbar.text(1, y_move, 'Extreme\nheat stress', ha='center', va='center', transform=hbar.transAxes, color=tone_color,
+              fontsize='small')
+
+    # Add stacked plot
+    bins = [-100, -40, -27, -13, 0, 9, 26, 32, 38, 46, 100]
+    tags = ["Extreme cold stress", "Very strong cold stress", "Strong cold stress", "Moderate cold stress",
+            "Slight cold stress", "No thermal stress", "Moderate heat stress", "Strong heat stress",
+            "Very strong heat stress", "Extreme heat stress"]
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+
+    clrs = utci_cmap.colors
+
+    adf = pd.DataFrame()
+    for mnth_n, mnth in enumerate(months):
+        # Filter the series to return only the month
+        a = series[series.index.month == mnth_n + 1].dropna().values
+        a = pd.Series(index=tags, name=mnth,
+                      data=[((a > i) & (a <= j)).sum() / len(a) for n, (i, j) in enumerate(zip(bins[:-1], bins[1:]))])
+        adf = pd.concat([adf, a], axis=1)
+    adf = adf.T[tags]
+    adf.plot(kind="bar", ax=hbar, stacked=True, color=clrs, width=1, legend=False)
+    hbar.set_xlim(-0.5, 11.5)
+    #
+    # # Major ticks
+    hbar.set_xticks(np.arange(-0.5, 11, 1))
+
+    # Labels for major ticks
+    hbar.set_xticklabels(months)
+
+    # Minor ticks
+    # hbar.set_xticks(np.arange(-.5, 11, 1), minor=True)
+
+    plt.setp(hbar.get_xticklabels(), ha='center', rotation=0, color=tone_color)
+    plt.setp(hbar.get_xticklabels(), ha='left', color=tone_color)
+    plt.setp(hbar.get_yticklabels(), color=tone_color)
+    for spine in ['top', 'right']:
+        hbar.spines[spine].set_visible(False)
+    for spine in ['bottom', 'left']:
+        hbar.spines[spine].set_color(tone_color)
+    hbar.grid(b=True, which='major', color=tone_color, linestyle=':', alpha=0.5)
+    hbar.set_yticklabels(['{:,.0%}'.format(x) for x in hbar.get_yticks()])
+
+    # Add header percentages for bar plot
+    cold_percentages = adf.iloc[:, :5].sum(axis=1).values
+    comfortable_percentages = adf.iloc[:, 5]
+    hot_percentages = adf.iloc[:, 6:].sum(axis=1).values
+    for n, (i, j, k) in enumerate(zip(*[cold_percentages, comfortable_percentages, hot_percentages])):
+        hbar.text(n, 1.02, "{0:0.1f}%".format(i * 100), va="bottom", ha="center", color="#3C65AF", fontsize="small")
+        hbar.text(n, 1.02, "{0:0.1f}%\n".format(j * 100), va="bottom", ha="center", color="#2EB349", fontsize="small")
+        hbar.text(n, 1.02, "{0:0.1f}%\n\n".format(k * 100), va="bottom", ha="center", color="#C31F25", fontsize="small")
+    hbar.set_ylim(0, 1)
+
+    # Add title if provided
+    if title is not None:
+        ti = hmap.set_title(title, color=tone_color, y=1, ha="left", va="bottom", x=0)
+
+    plt.tight_layout()
+
+    # Save figure
+    if save_path is not None:
+        plt.savefig(save_path, dpi=300, bbox_extra_artists=[ti,], transparent=False)
+        print("UTCI detailed saved to {}".format(save_path))
+
+    if close:
+        plt.close()
+
