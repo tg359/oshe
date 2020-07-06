@@ -11,7 +11,7 @@ from honeybee.radiance.sky.skymatrix import SkyMatrix
 
 from .geometry import Ground, Shade
 from .helpers import flatten, chunks
-from .helpers import load_radiance_results
+from .helpers import load_radiance_results, nukedir
 
 
 class _HiddenPrints:
@@ -49,6 +49,10 @@ def run_radiance(epw_file: str, ground: Ground, shades: Shade = None, case_name:
         Annual hourly direct and diffuse radiation
 
     """
+
+    # Clear directory of results prior to running
+    nukedir(pathlib.Path(output_directory) / case_name)  ################################################ TODO: remove possibly or do in a less extreme way??
+
     # Construct case output directory and process variables
     epw_file = pathlib.Path(epw_file)
 

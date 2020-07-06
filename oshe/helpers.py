@@ -1,5 +1,6 @@
 import json
 import pathlib
+import shutil
 import uuid
 
 import numpy as np
@@ -235,4 +236,9 @@ def convert_recipe_to_composite(recipe_json: str, clean: bool = False):
     if clean:
         json_file.rename(json_file.parent / json_file.name.replace(".", "_OLD."))
 
+    return None
+
+
+def nukedir(directory: str):
+    shutil.rmtree(directory, ignore_errors=True, onerror=None)
     return None

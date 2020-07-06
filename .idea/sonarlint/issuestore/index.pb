@@ -30,7 +30,3 @@ A
 oshe/openfield.py,d\8\d823f36383cdc5f6baed4cce59b369d345969e79
 E
 oshe/skyviewfactor.py,e\7\e72ad15174f4614cd4fffec753ec97ef286463b2
-C
-oshe/psychrometrics,4\0\401dd33a078d0e20e4b58ed830ab286003571d32
-?
-oshe/weather.py,9\9\99d4c604a741bb575e0dcdc466053e181e1b97b1
